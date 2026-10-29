@@ -1,0 +1,8 @@
+INTEGER 2low = 5
+INTEGER big = 99999999999
+DECIMAL d = 3.
+STRING s = "unterminated
+CHARACTER c = 'ab'
+x = y ! z
+@
+/* never closed

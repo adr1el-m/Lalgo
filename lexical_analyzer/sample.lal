@@ -1,0 +1,20 @@
+ARRAY numbers = [2, 4, 6, 8, 10]
+INTEGER target = 8
+INTEGER low = 0
+INTEGER high = 4
+INTEGER mid = 0
+BOOLEAN found = FALSE
+WHILE (low <= high AND found == FALSE) {
+    mid = low + (high - low) DIV 2
+    // Update search boundaries according to the comparison
+    IF (numbers[mid] == target) {
+        found = TRUE
+        OUTPUT mid
+    }
+    ELSE IF (numbers[mid] < target) {
+        low = mid + 1
+    }
+    ELSE {
+        high = mid - 1
+    }
+}

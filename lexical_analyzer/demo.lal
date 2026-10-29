@@ -1,0 +1,11 @@
+/* extras: FOR, SET, THE, INPUT, ^ precedence, suspectedKeyword */
+STRING name = "Binary Search"
+CHARACTER grade = 'A'
+DECIMAL ratio = 0.618
+INPUT target
+FOR (INTEGER i = 0; i < 10; i = i + 1) {
+    OUTPUT THE numbers[i];
+}
+SET total = -2 ^ 3 ^ 2 + 7 % 3
+IF (NOT found == TRUE OR low != 0) { OUTPUT "done" }
+while = 5
