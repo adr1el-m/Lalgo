@@ -39,7 +39,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyfoot[L]{\footnotesize\color{muted}5 November 2026 meeting notes}
-\fancyfoot[R]{\small\color{maroon}\thepage\,/\,4}
+\fancyfoot[R]{\small\color{maroon}\thepage\,/\,6}
 \renewcommand{\headrulewidth}{0pt}
 \begin{document}
 
@@ -50,7 +50,7 @@
 \section{1. What matters now}
 The lexical analyzer is working locally. Our main work is to turn the proposed
 language forms into a \textbf{formal grammar and a working syntax analyzer}.
-This guide condenses the four recordings and both checking rubrics. Short,
+This guide condenses the four recordings and the checking rubrics. Short,
 timestamped excerpts support the requirements; full transcripts stay in the meeting notes.
 
 \readybox{\good\ means the stated portion exists in the current source or documentation.
@@ -85,8 +85,8 @@ They are already in LAlgo's proposal. Define their grammar and parsing behavior.
 
 \neutralbox{\textbf{Team priority:} scope decisions $\rightarrow$ grammar and per-rule derivations
 $\rightarrow$ parser and diagnostics. The iteration limit concerns language features;
-syntax and semantic checking milestones still apply. Submission time/platform and the
-full semantic rubric are not supplied in these materials.}
+syntax and semantic checking milestones still apply. Submission time/platform and
+detailed scoring weights are not supplied in these materials. The semantic guide is now included on page 6.}
 
 \clearpage
 \section{2. Lexical analyzer: what already works}
@@ -209,11 +209,86 @@ error recovery, and concise diagnostics. Include single/nested-loop cases and ma
 \end{enumerate}
 
 {\footnotesize\color{muted}
-\textbf{Where this comes from.} The 5 November recordings 01--04, both checking guides,
+\textbf{Where this comes from.} The 5 November recordings 01--04, the lexical, syntax, and semantic checking guides,
 and Adriel's reported iteration scope limit. Current source baseline:
 \code{e042368}; lexer tests: 31/31 locally. Quoted excerpts are lightly edited machine-assisted transcriptions; recording numbers follow
 the supplied files 1--4, with timestamps restarting per file. The iteration scope limit was
 reported by Adriel without a verified audio timestamp. Full transcripts and audit notes remain in the
 \href{https://github.com/adr1el-m/Lalgo/blob/main/docs/meetings/2026-11-05-meeting.md}{unified meeting notes}.
 This is a planning guide, not an instructor-approved grade or completed grammar/parser.}
+
+\clearpage
+\section{5. Ma'am's syntax checking table}
+These are the criteria shown on screen. The \textbf{Existing} and \textbf{Point} columns
+are left blank, just as in the guide. Our progress assessment is on pages 2--4.
+
+{\small\setlength{\tabcolsep}{7pt}\renewcommand{\arraystretch}{1.6}
+\begin{tabularx}{\linewidth}{|Y|L{22mm}|L{17mm}|}
+\hline
+\rowcolor{cream}\textbf{Criteria} & \textbf{Existing} & \textbf{Point} \\ \hline
+1. Input must be read one by one from the symbol table (one token at a time) & & \\ \hline
+2. A parser algorithm was implemented\newline Algorithm: Recursive Descent Parsing & & \\ \hline
+3. Transition Diagram & & \\ \hline
+4. Parsing table & & \\ \hline
+5. Input Statement \quad /1 & & \\ \hline
+6. Output Statement \quad /3 & & \\ \hline
+7. Assignment Statement \quad /3 & & \\ \hline
+8. Condition Statement \quad /3 & & \\ \hline
+9. Iterative Statement \quad /2 & & \\ \hline
+10. Declaration Statement & & \\ \hline
+11. Error Recovery\newline Method used: & & \\ \hline
+12. Error Messages & & \\ \hline
+Total: & & \\ \hline
+Percentage (total score/total items) & & \\ \hline
+\end{tabularx}}
+
+\neutralbox{\textbf{Read this with recording 04.} Recursive descent is an example;
+items 3--4 are optional. Declaration applies when it is in the proposal, as it is for LAlgo.
+Iteration /2 means single and nested loops of one chosen kind. In-memory terminal input is allowed.}
+
+{\footnotesize\color{muted}Source: Ma'am's Syntax Analyzer screenshot, also explained in
+recording 04. The written table is reproduced separately from our implementation status;
+no points or percentage have been assigned here.}
+
+\clearpage
+\section{6. Ma'am's semantic checking table}
+\focusbox{\todo\ \textbf{Semantic analysis still needs to be built.} We have token recognition
+and source positions, but no semantic-rule checker or semantic symbol-table updates yet.}
+
+{\small\setlength{\tabcolsep}{7pt}\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{|Y|L{22mm}|L{17mm}|}
+\hline
+\rowcolor{cream}\textbf{Criteria} & \textbf{Existing} & \textbf{Point} \\ \hline
+1. Implementation of Semantic Rules:\newline
+Evidence: must have a semantic rule for every syntactic rule & & \\ \hline
+\multicolumn{3}{|l|}{\textbf{Semantic Errors: (Basic)}} \\ \hline
+2. Input Statement\newline Data Type Mismatch\newline Variable Not Declared & & \\ \hline
+3. Output Statement\newline Data Type Mismatch\newline Variable Not Declared & & \\ \hline
+4. Assignment Statement\newline Data Type Mismatch\newline Variable Not Declared & & \\ \hline
+5. Condition Statement\newline Data Type Mismatch\newline Variable Not Declared & & \\ \hline
+6. Iterative Statement\newline Data Type Mismatch\newline Variable Not Declared & & \\ \hline
+7. Declaration Statement\newline Data Type Mismatch\newline Variable Not Declared\newline
+Double Declaration\newline Warning: Variable declared but not used & & \\ \hline
+8. Additional Semantic Error(s) (Optional) & & \\ \hline
+9. Error Recovery & & \\ \hline
+10. Error Messages & & \\ \hline
+11. Changes in Symbol Table value & & \\ \hline
+Total Grade & & \\ \hline
+\end{tabularx}}
+
+\subsection{What we need to add for the semantic milestone}
+\begin{itemize}
+\item \textcolor{focus}{\textbf{A semantic rule for every syntax rule.}} Define legal types,
+declarations, identifier use, and how each construct changes semantic state.
+\item \textcolor{focus}{\textbf{Checks and useful diagnostics.}} Cover the listed type/declaration errors,
+duplicate declarations, unused-variable warnings, and recovery. Extra error categories are optional.
+\item \textcolor{focus}{\textbf{A semantic symbol table with updates.}} The current token-occurrence listing
+is groundwork, not this deliverable. Define and demonstrate the value/state changes required by the guide.
+\end{itemize}
+
+{\footnotesize\color{muted}Source: the Semantic Analyzer screenshot supplied by Adriel after the
+recordings. No accompanying semantic explanation/audio was supplied. The table is transcribed
+as shown; exact type rules, update behavior, and scoring must be defined or clarified.
+Existing/Point cells remain blank.}
+
 \end{document}

@@ -37,7 +37,7 @@ if $MEETING_GUIDE_ONLY; then
     --author "PUP COSC 303 - Group 4"
     --subject "Programming Languages"
     --tags "LAlgo,Programming Languages,Team Guide,Lexical Analysis,Syntax Analysis"
-    --abstract "A concise guide to the 5 November 2026 meeting requirements, with ready and focus status labels, lexical and syntax rubric coverage, deadlines, and a team action plan."
+    --abstract "A concise guide to the 5 November 2026 meeting requirements, with ready and focus status labels, lexical/syntax coverage, the syntax and semantic checking tables, deadlines, and a team action plan."
     --source LAlgo_Team_Requirements_Guide.pdf
     --yes
   )
