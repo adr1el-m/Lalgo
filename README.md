@@ -20,6 +20,7 @@ The project currently covers **lexical analysis**. Parsing, semantic analysis, s
 ## Meeting notes
 
 - [5 November 2026 — Recording 01: introduction, deadlines, and syntax-analyzer requirements](docs/meetings/2026-11-05-01-introduction.md): chronological transcript, English digest, schedule, comparison with the current implementation, and suggested team checklist. Uncertain transcription is marked explicitly.
+- [5 November 2026 — Recording 02: conditional statements and one example per rule](docs/meetings/2026-11-05-02-conditionals.md): chronological transcript, explanation of the three required IF forms, illustrative examples, and a comparison with LAlgo's current grammar and implementation status.
 
 ## Project timeline
 

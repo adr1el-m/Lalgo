@@ -6,6 +6,8 @@
 
 **Sequence:** First recording / meeting introduction. Additional recordings should follow as separate numbered notes.
 
+**Next:** [Recording 02 — Conditional statements and one example per rule](2026-11-05-02-conditionals.md).
+
 This document has two parts: a chronological transcript in the original Tagalog/English, followed by an English explanation and a comparison with LAlgo's current repository. Section 2.5 separately records a mid-meeting instruction supplied by Adriel after this introduction was transcribed. The explanations and suggested tasks are editorial notes, not additional instructions from Ma'am.
 
 **Transcript status:** Machine-assisted, lightly edited for punctuation and technical spellings; checked against a second speech-recognition pass, not independently verified by human listening. This is a readable transcript, not a certified verbatim record. `[unclear]` identifies wording that could not be recovered confidently. Speaker labels are inferred from the exchange; timestamps are approximate. Pauses and repeated fillers are shortened.
@@ -177,6 +179,7 @@ These are implementation recommendations based on the current code, not addition
 This is a proposed work sequence derived from the introduction and the separately attributed mid-meeting instruction in Section 2.5. It does not change the language or assign tasks to individual members.
 
 - [ ] Read the remaining meeting recordings for the required statement list, demonstration, and any corrections to this introduction.
+- [ ] Apply [recording 02's conditional requirements](2026-11-05-02-conditionals.md): single IF, IF–ELSE, and IF–ELSE IF–ELSE, each mapped to its rule and a distinct example with derivations; cover additional rules as needed.
 - [ ] Reconcile Ma'am's previous lexer feedback with the current implementation and changelog.
 - [ ] Enforce Ma'am's reported **one iterative statement form** requirement: choose `WHILE` or `FOR`, define the other spelling's status, and align the grammar, keyword policy, lexer, documentation, examples, and tests. The current design includes both.
 - [ ] Prepare the new syntax section for November 12, preserving the existing worked token stream.
