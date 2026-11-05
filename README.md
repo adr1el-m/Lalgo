@@ -19,7 +19,7 @@ The project currently covers **lexical analysis**. Parsing, semantic analysis, s
 
 ## Meeting notes
 
-- [5 November 2026 — Unified meeting transcript and requirements](docs/meetings/2026-11-05-meeting.md): recordings 01–03 in sequence, English explanations, schedule, comparison with LAlgo, illustrative examples, and a shared team checklist. Additional recordings will be appended to this document. Uncertain transcription is marked explicitly.
+- [5 November 2026 — Unified meeting transcript and requirements](docs/meetings/2026-11-05-meeting.md): recordings 01–04 in sequence, lexical/syntax checking-guide screenshots, English explanations, schedule, comparison with LAlgo, illustrative examples, and a shared team checklist. Uncertain transcription is marked explicitly.
 
 ## Project timeline
 
