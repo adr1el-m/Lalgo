@@ -17,6 +17,12 @@ The repository brings together the original proposal, evolving language specific
 
 The project currently covers **lexical analysis**. Parsing, semantic analysis, statement-boundary rules, and runtime execution remain future work. Reserved words and illustrative programs describe language forms; they do not establish an executable compiler or interpreter.
 
+## Team guide
+
+Start with the [four-page requirements guide](LAlgo_Team_Requirements_Guide.pdf) for the 5 November meeting. It uses the papers' maroon-and-cream theme, green **Ready** labels for existing portions, and red **Focus** labels for missing work or decisions. It includes deadlines, scope limits, lexical/syntax coverage, and the team's next steps, with short timestamped quotes instead of full transcripts. [Editable LaTeX](lalgo_team_guide.tex).
+
+Rebuild with `make guide` or `./publish.sh --meeting-guide-only --build-only`. The guide's optional website-publishing route is `./publish.sh --meeting-guide-only` (use `--no-push` for a local website draft).
+
 ## Meeting notes
 
 - [5 November 2026 — Unified meeting transcript and requirements](docs/meetings/2026-11-05-meeting.md): recordings 01–04 in sequence, lexical/syntax checking-guide screenshots, English explanations, schedule, comparison with LAlgo, illustrative examples, and a shared team checklist. Uncertain transcription is marked explicitly.

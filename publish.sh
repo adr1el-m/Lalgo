@@ -5,19 +5,48 @@ cd "$(dirname "$0")"
 
 BUILD_ONLY=false
 NO_PUSH=false
+MEETING_GUIDE_ONLY=false
 
 for arg in "$@"; do
   case "$arg" in
     --build-only) BUILD_ONLY=true ;;
     --no-push) NO_PUSH=true ;;
+    --meeting-guide-only) MEETING_GUIDE_ONLY=true ;;
     *)
-      echo "Usage: ./publish.sh [--build-only] [--no-push]" >&2
+      echo "Usage: ./publish.sh [--build-only] [--no-push] [--meeting-guide-only]" >&2
       exit 2
       ;;
   esac
 done
 
 mkdir -p build
+if $MEETING_GUIDE_ONLY; then
+  make test
+  mkdir -p build/meeting-guide
+  latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build/meeting-guide lalgo_team_guide.tex
+  cp build/meeting-guide/lalgo_team_guide.pdf LAlgo_Team_Requirements_Guide.pdf
+  if $BUILD_ONLY; then
+    exit 0
+  fi
+  GUIDE_ARGS=(
+    node ../papers-site/publish.js
+    --kind paper
+    --slug lalgo-team-requirements-guide
+    --title "LAlgo: Team Requirements and Action Guide"
+    --subtitle "Meeting decisions, implementation status, and next steps"
+    --author "PUP COSC 303 - Group 4"
+    --subject "Programming Languages"
+    --tags "LAlgo,Programming Languages,Team Guide,Lexical Analysis,Syntax Analysis"
+    --abstract "A concise guide to the 5 November 2026 meeting requirements, with ready and focus status labels, lexical and syntax rubric coverage, deadlines, and a team action plan."
+    --source LAlgo_Team_Requirements_Guide.pdf
+    --yes
+  )
+  if ! $NO_PUSH; then
+    GUIDE_ARGS+=(--push)
+  fi
+  "${GUIDE_ARGS[@]}"
+  exit 0
+fi
 make test
 python3 lexical_analyzer/export_unified_dfa.py
 latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build lalgo_language_specification.tex

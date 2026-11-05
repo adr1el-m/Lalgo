@@ -1,0 +1,230 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype}
+\usepackage[margin=23mm,headheight=15pt,headsep=8mm,footskip=12mm]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{graphicx,booktabs,tabularx,array,ragged2e}
+\usepackage{fancyhdr,titlesec,enumitem,amssymb}
+\definecolor{maroon}{HTML}{800000}
+\definecolor{cream}{HTML}{F7F3ED}
+\definecolor{muted}{HTML}{646464}
+\definecolor{ready}{HTML}{17623D}
+\definecolor{readybg}{HTML}{EDF6F0}
+\definecolor{focus}{HTML}{A32932}
+\definecolor{focusbg}{HTML}{FCF0F0}
+\usepackage[colorlinks=true,linkcolor=maroon,urlcolor=maroon]{hyperref}
+\hypersetup{pdftitle={LAlgo: Team Requirements and Action Guide},pdfauthor={PUP COSC 303 - Group 4}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\emergencystretch=3em
+\clubpenalty=10000
+\widowpenalty=10000
+\titleformat{\section}{\Large\bfseries\color{maroon}}{}{0pt}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{maroon}}{}{0pt}{}
+\titlespacing*{\section}{0pt}{9pt}{7pt}
+\titlespacing*{\subsection}{0pt}{8pt}{4pt}
+\setlist{leftmargin=1.4em,itemsep=3pt,topsep=3pt,parsep=0pt}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\good}{\textcolor{ready}{\bfseries READY}}
+\newcommand{\todo}{\textcolor{focus}{\bfseries FOCUS}}
+\newcommand{\checkitem}[1]{\item[$\square$] #1}
+\newcommand{\boxnote}[3]{\par\smallskip\begingroup\setlength{\fboxsep}{8pt}\colorbox{#1}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{\color{#2}\small #3}}\endgroup\par\smallskip}
+\newcommand{\readybox}[1]{\boxnote{readybg}{ready}{#1}}
+\newcommand{\focusbox}[1]{\boxnote{focusbg}{focus}{#1}}
+\newcommand{\neutralbox}[1]{\boxnote{cream}{black}{#1}}
+\newcommand{\profquote}[2]{\neutralbox{\textbf{Ma'am:} ``#1''\par{\footnotesize\color{muted}#2}}}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{maroon}\bfseries LAlgo / Team Requirements Guide}
+\fancyhead[R]{\small\color{muted}COSC 303 | Group 4}
+\fancyfoot[L]{\footnotesize\color{muted}Meeting: 5 November 2026 | Local implementation review}
+\fancyfoot[R]{\small\color{maroon}\thepage\,/\,4}
+\renewcommand{\headrulewidth}{.3pt}
+\begin{document}
+
+\begin{minipage}[c]{.16\linewidth}
+\includegraphics[width=21mm]{img/PUPLogo.png}
+\end{minipage}\hfill
+\begin{minipage}[c]{.81\linewidth}
+{\small Polytechnic University of the Philippines\par}
+{\fontsize{29}{33}\selectfont\bfseries\color{maroon}LAlgo\par}
+{\Large\bfseries Team Requirements \& Action Guide\par}
+{\small BSCS 3-1, Group 4 | Prof. Ria A. Sagum\par}
+\end{minipage}
+\vspace{3mm}
+{\color{maroon}\hrule height .7pt}
+\vspace{2mm}
+
+\section{1. What matters now}
+The lexical analyzer is working locally. Our main work is to turn the proposed
+language forms into a \textbf{formal grammar and a working syntax analyzer}.
+This guide condenses the four recordings and both checking rubrics. Short,
+timestamped excerpts support the requirements; full transcripts stay in the meeting notes.
+
+\readybox{\good\ means the stated portion exists in the current source or documentation.
+\textbf{It is not an instructor grade.} The lexer passes \textbf{31/31 local tests}.}
+\focusbox{\todo\ means missing work, partial coverage, or a decision we still need to settle.
+A keyword or sample program does not establish a working parser.}
+
+\subsection{Settle these scope decisions first}
+\begin{enumerate}
+\item \textcolor{focus}{\textbf{Choose one loop kind: \code{WHILE} or \code{FOR}.}}
+Support both \textbf{single and nested} uses of that chosen kind. The current design lists both kinds.
+\item \textcolor{focus}{\textbf{Keep language features through iteration only.}}
+Review future-reserved \code{ALGORITHM}, \code{RETURN}, \code{TRACE}, and \code{INVARIANT};
+do not expand them into extra supported constructs for this scope.
+\item \textcolor{focus}{\textbf{Keep declarations in the work plan.}}
+They are already in LAlgo's proposal. Define their grammar and parsing behavior.
+\end{enumerate}
+
+\profquote{Kung FOR or WHILE, bahala kayo. Pero ang rule niya, dalawa.}{Recording 04, 05:24--05:46. She then names single and nested loops.}
+
+\subsection{Dates stated in the meeting}
+{\small\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}L{26mm}Y@{}}
+\toprule
+\textbf{Date, 2026} & \textbf{Milestone} \\\midrule
+12 November & Submit syntax proposal: grammar, examples, and derivations. Face-to-face by default. \\
+19 November & Asynchronous project work. \\
+26 November & Lexical checking 2 and syntax checking 1. \\
+3 December & Asynchronous project work. \\
+10 December & Syntax checking 2, semantics checking 1, final project checking and final exam. \\\bottomrule
+\end{tabularx}}
+
+\neutralbox{\textbf{Team priority:} scope decisions $\rightarrow$ grammar and per-rule derivations
+$\rightarrow$ parser and diagnostics. The iteration limit concerns language features;
+syntax and semantic checking milestones still apply. Submission time/platform and the
+full semantic rubric are not supplied in these materials.}
+
+\clearpage
+\section{2. Lexical analyzer: preserve what works}
+\readybox{\good\ \textbf{Recognition and output are implemented.} The rows below map to the
+11 lexical-rubric areas. They describe lexical behavior, not syntax or execution.}
+
+{\small\renewcommand{\arraystretch}{1.21}
+\begin{tabularx}{\linewidth}{@{}L{8mm}L{35mm}Y@{}}
+\toprule
+\textbf{\#} & \textbf{Area} & \textbf{Existing evidence --- \textcolor{ready}{READY}} \\\midrule
+1 & Input restriction & Accepts \code{.lal} / \code{.LAL}; rejects other extensions before opening the source. Rejects NUL-containing input. \\
+2 & Identifiers & Letter first; then letters, digits, or underscores. Case-sensitive. \\
+3 & Keywords & Recognizes the current type, control-flow, and input/output vocabulary through the unified DFA. \\
+4 & Reserved words & Reserved spellings and separate future-reserved token classes exist. Their final scope needs review below. \\
+5 & Constant values & Five categories: integer, decimal, character, string, Boolean. \code{TRUE}/\code{FALSE} count as one category. \\
+6 & Noise words & Recognizes \code{SET} and \code{THE}. \\
+7 & Comments & Recognizes \code{//} line comments and \code{/* ... */} block comments; retains them in the listing. \\
+8a & Arithmetic: 7 & \code{+ - * / \% DIV \textasciicircum}. Assignment \code{=} is counted separately. \\
+8b & Boolean: 9 & Logical: \code{AND OR NOT}. Relational: \code{== != < > <= >=}. \\
+9 & Delimiters/brackets & Recognizes \code{( ) [ ] \{ \}}, comma, semicolon, colon, and dot. Pairing/nesting checks belong to parsing. \\
+10 & Invalid tokens & Emits \code{INVALID} and lexical line/column diagnostics for documented malformed lexemes. \\
+11 & Output text file & Writes \code{Symbol Table.txt}: token occurrences, classifications, positions, and lexemes; includes comments/invalid entries. \\\bottomrule
+\end{tabularx}}
+
+\profquote{Sa lexical analyzer n'yo, na ang output ay symbol table.}{Recording 04, 00:50--00:57. Retain the lexical output file.}
+
+\subsection{Focus before presenting this as complete}
+\begin{itemize}
+\item \textcolor{focus}{\textbf{Align the vocabulary.}} Resolve the loop choice and the future-reserved words
+against the iteration scope boundary. Explain keyword versus reserved-word terminology.
+\item \textcolor{focus}{\textbf{Resolve rubric interpretation.}} The extension filter works, but global
+uniqueness of \code{.lal} is unverified. Confirm the intended keyword/reserved distinction
+and nine-Boolean-operator classification.
+\item \textcolor{focus}{\textbf{Reconcile previous feedback.}} Local tests do not establish that every item
+from Ma'am's previous checking has been addressed.
+\end{itemize}
+
+\neutralbox{\textbf{Demo evidence to keep:} a valid \code{.lal} sample, a rejected \code{.txt},
+all token categories, malformed input, and the generated \code{Symbol Table.txt}.
+The blank rubric scores remain Ma'am's assessment.}
+
+\clearpage
+\section{3. Syntax coverage: this is our main focus}
+\focusbox{\todo\ \textbf{All statement families still need formal grammar and parser support.}
+Existing snippets provide examples, but no implemented syntax analyzer is present.}
+
+{\small\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}L{29mm}Y L{35mm}@{}}
+\toprule
+\textbf{Family} & \textbf{Coverage Ma'am expects} & \textbf{Our next action} \\\midrule
+Input /1 & One input construct; its rule design is up to us. & \todo\ Define \code{INPUT}'s grammar. \\
+Output /3 & String only; variable value only; string plus variable value. & \todo\ Define combined output; cover all three forms. \\
+Assignment /3 & Variable to variable; constant to variable; expression result to variable. & \todo\ Cover all three plain-assignment forms. \\
+Condition /3 & Single IF; IF--ELSE; IF--ELSE IF--ELSE chain. & \todo\ Define all three IF forms. \\
+Iteration /2 & Single loop and nested loops, using one chosen loop kind. & \todo\ Choose FOR or WHILE; cover nesting. \\
+Declaration & Required for us because it is already proposed. Discuss single-variable, list, and initialized forms. & \todo\ Define declarations and list syntax. \\\bottomrule
+\end{tabularx}}
+
+\profquote{One example for every rule in that statement.}{Recording 02, 01:02--01:08. Each rule needs its own matching example.}
+
+\subsection{What each applicable rule needs for 12 November}
+\begin{enumerate}
+\item \textcolor{focus}{\textbf{Formal grammar components:}} terminals, nonterminals, productions,
+and a grammar start symbol. The lexer's \code{q0} is not that start symbol.
+\item \textcolor{focus}{\textbf{A distinct matching example:}} three examples of a single IF do not cover
+three different conditional forms. Cover additional applicable rules too.
+\item \textcolor{focus}{\textbf{Leftmost and rightmost derivations:}} apply the actual written productions
+until the example is obtained. Include the requested parse-tree/arrow-based derivation display.
+\end{enumerate}
+
+\readybox{\good\ \textbf{Documented groundwork only:} token vocabulary, expression examples,
+operator meanings, and intended precedence/associativity already exist in the specification.
+Reuse these decisions, then encode them in the grammar. They are not implemented evaluation.}
+
+\neutralbox{\textbf{Keep these distinctions clear.} \code{a = b + 3} is plain assignment;
+\code{INTEGER a = b + 3} is declaration with initialization. The declaration count is not
+fixed on the screen; Ma'am tentatively discusses three forms. Her printf examples do not
+force C-style formatting in LAlgo.}
+
+\clearpage
+\section{4. Build and demonstrate the syntax analyzer}
+\readybox{\good\ \textbf{Available foundation:} the lexer stores token type, lexeme, line, and column
+in memory and creates EOF. Ma'am permits an \textbf{in-memory handoff}, one grammar terminal
+at a time. Continue generating \code{Symbol Table.txt} for the lexical rubric.}
+
+\subsection{Required work --- all marked Focus}
+\begin{description}[style=nextline,leftmargin=0pt,labelindent=0pt,labelwidth=0pt,labelsep=0pt,itemsep=5pt]
+\item[\textcolor{focus}{1. Define the terminal interface.}]
+Expose sequential token consumption, including EOF and source positions. Decide how
+comments, invalid entries, and noise words are handled. Define statement boundaries.
+\item[\textcolor{focus}{2. Select and implement a parser algorithm.}]
+Recursive descent is an accepted example, not the only permitted algorithm. Document the
+chosen approach and make it enforce our grammar, precedence, and nesting.
+\item[\textcolor{focus}{3. Show derivations for valid syntax.}]
+Provide the requested production/derivation output. A lexical DFA trace does not satisfy
+this requirement. Check every required statement form on page 3.
+\item[\textcolor{focus}{4. Name and implement error recovery.}]
+Ma'am illustrates panic recovery. Choose grammar-appropriate synchronization points and
+show that checking continues after an invalid statement. Retain the overall error result.
+\item[\textcolor{focus}{5. Make syntax errors brief and useful.}]
+Include location and the reason or expected construct. Her example is ``Syntax error at
+line 15, semicolon expected.'' It does not itself mandate semicolons in our grammar.
+\end{description}
+
+\profquote{The error message must be brief and concise, but it will further give the programmer the reason why there is such an error.}{Recording 04, 07:38--07:48. Include a useful reason, not just ``syntax error.''}
+
+\subsection{Optional artifacts --- not automatic blockers}
+\neutralbox{\textbf{Syntax transition diagram and parsing table are optional} in the checking guide.
+Their usefulness depends on the approach we choose. Existing lexical DFA diagrams and the
+\code{DELTA} transition table are different artifacts.}
+
+\subsection{Recommended team handoff order}
+\begin{enumerate}
+\item \textbf{Agree:} one loop kind, supported statement forms, output/list syntax, boundaries,
+and reserved vocabulary. Compare relevant C/Java operations; Python is optional.
+\item \textbf{Document:} Part 3 grammar plus a rule-to-example-and-derivation checklist.
+Preserve the existing worked lexical example when reorganizing the specification.
+\item \textbf{Implement and check:} parser interface, required syntax, derivation output,
+error recovery, and concise diagnostics. Include single/nested-loop cases and malformed input.
+\end{enumerate}
+
+{\footnotesize\color{muted}
+\textbf{Basis and limits.} Team synthesis of the 5 November recordings 01--04, both rubric
+screenshots, and Adriel's reported iteration scope limit. Current source baseline:
+\code{e042368}; lexer tests: 31/31 locally. Quoted excerpts are lightly edited machine-assisted transcriptions; recording numbers follow
+the supplied files 1--4, with timestamps restarting per file. The iteration scope limit was
+reported by Adriel without a verified audio timestamp. Full transcripts and audit notes remain in the
+\href{https://github.com/adr1el-m/Lalgo/blob/main/docs/meetings/2026-11-05-meeting.md}{unified meeting notes}.
+This is a planning guide, not an instructor-approved grade or completed grammar/parser.}
+\end{document}

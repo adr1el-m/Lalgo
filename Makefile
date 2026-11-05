@@ -1,7 +1,7 @@
 CC = cc
 CFLAGS = -std=c99 -Wall -Wextra -Wpedantic -Werror
 
-.PHONY: all lexer test papers
+.PHONY: all lexer test papers guide
 all: lexer test
 
 lexer: build/lalgo
@@ -15,3 +15,6 @@ test: lexer
 
 papers:
 	./publish.sh --build-only
+
+guide:
+	./publish.sh --meeting-guide-only --build-only
