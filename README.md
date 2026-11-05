@@ -19,7 +19,7 @@ The project currently covers **lexical analysis**. Parsing, semantic analysis, s
 
 ## Team guide
 
-Start with the [four-page requirements guide](LAlgo_Team_Requirements_Guide.pdf) for the 5 November meeting. It uses the papers' maroon-and-cream theme, green **Ready** labels for existing portions, and red **Focus** labels for missing work or decisions. It includes deadlines, scope limits, lexical/syntax coverage, and the team's next steps, with short timestamped quotes instead of full transcripts. [Editable LaTeX](lalgo_team_guide.tex).
+Start with the [guide on the papers site](https://papers.adrielmagalona.com/paper/lalgo-team-requirements-guide/read) or the [four-page PDF](LAlgo_Team_Requirements_Guide.pdf) for the 5 November meeting. It keeps the papers' maroon-and-cream colors in a simple team-note layout, with green **Ready** labels for existing portions, and red **Focus** labels for missing work or decisions. It includes deadlines, scope limits, lexical/syntax coverage, and the team's next steps, with short timestamped quotes instead of full transcripts. [Editable LaTeX](lalgo_team_guide.tex).
 
 Rebuild with `make guide` or `./publish.sh --meeting-guide-only --build-only`. The guide's optional website-publishing route is `./publish.sh --meeting-guide-only` (use `--no-push` for a local website draft).
 

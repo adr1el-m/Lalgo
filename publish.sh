@@ -29,11 +29,11 @@ if $MEETING_GUIDE_ONLY; then
     exit 0
   fi
   GUIDE_ARGS=(
-    node ../papers-site/publish.js
+    node "${PAPERS_SITE_DIR:-../papers-site}/publish.js"
     --kind paper
     --slug lalgo-team-requirements-guide
-    --title "LAlgo: Team Requirements and Action Guide"
-    --subtitle "Meeting decisions, implementation status, and next steps"
+    --title "LAlgo: What We Need to Do"
+    --subtitle "A quick guide for the team"
     --author "PUP COSC 303 - Group 4"
     --subject "Programming Languages"
     --tags "LAlgo,Programming Languages,Team Guide,Lexical Analysis,Syntax Analysis"

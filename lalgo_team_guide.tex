@@ -14,7 +14,7 @@
 \definecolor{focus}{HTML}{A32932}
 \definecolor{focusbg}{HTML}{FCF0F0}
 \usepackage[colorlinks=true,linkcolor=maroon,urlcolor=maroon]{hyperref}
-\hypersetup{pdftitle={LAlgo: Team Requirements and Action Guide},pdfauthor={PUP COSC 303 - Group 4}}
+\hypersetup{pdftitle={LAlgo: What We Need to Do},pdfauthor={PUP COSC 303 - Group 4}}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
 \emergencystretch=3em
@@ -38,24 +38,13 @@
 \newcommand{\profquote}[2]{\neutralbox{\textbf{Ma'am:} ``#1''\par{\footnotesize\color{muted}#2}}}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\color{maroon}\bfseries LAlgo / Team Requirements Guide}
-\fancyhead[R]{\small\color{muted}COSC 303 | Group 4}
-\fancyfoot[L]{\footnotesize\color{muted}Meeting: 5 November 2026 | Local implementation review}
+\fancyfoot[L]{\footnotesize\color{muted}5 November 2026 meeting notes}
 \fancyfoot[R]{\small\color{maroon}\thepage\,/\,4}
-\renewcommand{\headrulewidth}{.3pt}
+\renewcommand{\headrulewidth}{0pt}
 \begin{document}
 
-\begin{minipage}[c]{.16\linewidth}
-\includegraphics[width=21mm]{img/PUPLogo.png}
-\end{minipage}\hfill
-\begin{minipage}[c]{.81\linewidth}
-{\small Polytechnic University of the Philippines\par}
-{\fontsize{29}{33}\selectfont\bfseries\color{maroon}LAlgo\par}
-{\Large\bfseries Team Requirements \& Action Guide\par}
-{\small BSCS 3-1, Group 4 | Prof. Ria A. Sagum\par}
-\end{minipage}
-\vspace{3mm}
-{\color{maroon}\hrule height .7pt}
+{\fontsize{23}{28}\selectfont\bfseries\color{maroon}LAlgo: what we need to do\par}
+{\small\color{muted}A quick guide for the team | 5 November 2026\par}
 \vspace{2mm}
 
 \section{1. What matters now}
@@ -100,7 +89,7 @@ syntax and semantic checking milestones still apply. Submission time/platform an
 full semantic rubric are not supplied in these materials.}
 
 \clearpage
-\section{2. Lexical analyzer: preserve what works}
+\section{2. Lexical analyzer: what already works}
 \readybox{\good\ \textbf{Recognition and output are implemented.} The rows below map to the
 11 lexical-rubric areas. They describe lexical behavior, not syntax or execution.}
 
@@ -140,7 +129,7 @@ all token categories, malformed input, and the generated \code{Symbol Table.txt}
 The blank rubric scores remain Ma'am's assessment.}
 
 \clearpage
-\section{3. Syntax coverage: this is our main focus}
+\section{3. Syntax: what we still need}
 \focusbox{\todo\ \textbf{All statement families still need formal grammar and parser support.}
 Existing snippets provide examples, but no implemented syntax analyzer is present.}
 
@@ -178,7 +167,7 @@ fixed on the screen; Ma'am tentatively discusses three forms. Her printf example
 force C-style formatting in LAlgo.}
 
 \clearpage
-\section{4. Build and demonstrate the syntax analyzer}
+\section{4. Build the parser}
 \readybox{\good\ \textbf{Available foundation:} the lexer stores token type, lexeme, line, and column
 in memory and creates EOF. Ma'am permits an \textbf{in-memory handoff}, one grammar terminal
 at a time. Continue generating \code{Symbol Table.txt} for the lexical rubric.}
@@ -220,8 +209,8 @@ error recovery, and concise diagnostics. Include single/nested-loop cases and ma
 \end{enumerate}
 
 {\footnotesize\color{muted}
-\textbf{Basis and limits.} Team synthesis of the 5 November recordings 01--04, both rubric
-screenshots, and Adriel's reported iteration scope limit. Current source baseline:
+\textbf{Where this comes from.} The 5 November recordings 01--04, both checking guides,
+and Adriel's reported iteration scope limit. Current source baseline:
 \code{e042368}; lexer tests: 31/31 locally. Quoted excerpts are lightly edited machine-assisted transcriptions; recording numbers follow
 the supplied files 1--4, with timestamps restarting per file. The iteration scope limit was
 reported by Adriel without a verified audio timestamp. Full transcripts and audit notes remain in the
