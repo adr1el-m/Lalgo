@@ -17,6 +17,10 @@ The repository brings together the original proposal, evolving language specific
 
 The project currently covers **lexical analysis**. Parsing, semantic analysis, statement-boundary rules, and runtime execution remain future work. Reserved words and illustrative programs describe language forms; they do not establish an executable compiler or interpreter.
 
+## Meeting notes
+
+- [5 November 2026 — Recording 01: introduction, deadlines, and syntax-analyzer requirements](docs/meetings/2026-11-05-01-introduction.md): chronological transcript, English digest, schedule, comparison with the current implementation, and suggested team checklist. Uncertain transcription is marked explicitly.
+
 ## Project timeline
 
 ### Original proposal — retained starting point
