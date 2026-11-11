@@ -1,5 +1,13 @@
 # LAlgo specification change log
 
+## Switch and case checking revision
+
+- Added uppercase `SWITCH`, `CASE`, `DEFAULT`, and `BREAK` to the unified DFA.
+- Added EBNF rules R42–R45, one example and parse tree per new rule, and both complete derivations.
+- Connected the C lexer terminal stream to the executable EBNF checker. Added switch demos and local checks for keyword boundaries, nesting, missing separators, missing arm terminators, and default placement.
+- Rebuilt the proposal, lexer paper, and team guide from the revised source.
+
+
 Changes requested from September 25, 2026 onward are recorded here. Each entry describes what was added or altered in the editable LaTeX source and its built PDF.
 
 ## 2026-10-30 — Lexer implementation paper and GitHub baseline

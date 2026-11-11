@@ -79,7 +79,7 @@ Principles of Programming Languages (COSC 303)\par
 LAlgo is a proposed programming language for expressing algorithm-oriented source
 programs. This paper documents its implemented lexical front end: a C99 scanner
 that recognizes tokens using one deterministic finite automaton (DFA), one start
-state, and one transition table. The selected implementation constructs 254
+state, and one transition table. The selected implementation constructs 288
 explicit states and 83 input classes. Reserved spellings are embedded in the
 automaton through paired keyword-prefix paths, allowing uppercase recognition
 and capitalization diagnostics without comparing completed lexemes against a
@@ -137,11 +137,16 @@ identifiers, comments, and invalid lexemes; EOF is omitted from it.
 a lexical occurrence listing. It does not resolve declarations, scopes, types,
 identifier uniqueness, or storage addresses.}
 
+The optional \code{p} argument emits tab-separated terminal records for the
+syntax checker, with type, line, column, and full lexeme. It retains EOF in the
+stream and writes the same lexical listing file.
+
 \subsection{Reserved spellings}
 \begin{tabularx}{\linewidth}{@{}p{33mm}Y@{}}
 \toprule Group & Uppercase spellings \\\midrule
 Data types & \code{INTEGER DECIMAL CHARACTER BOOLEAN ARRAY STRING} \\
-Control flow & \code{IF ELSE WHILE FOR} \\
+Control flow & \code{IF ELSE WHILE SWITCH CASE DEFAULT BREAK} \\
+Legacy token & \code{FOR} \\
 Input/output & \code{INPUT OUTPUT} \\
 Boolean constants & \code{TRUE FALSE} \\
 Word operators & \code{DIV AND OR NOT} \\
@@ -149,8 +154,8 @@ Future-reserved & \code{ALGORITHM RETURN TRACE INVARIANT} \\
 Noise words & \code{SET THE} \\\bottomrule
 \end{tabularx}
 
-The first five rows contain 18 current reserved spellings. Four future-reserved
-words and two noise words bring the total to 24. The lexer emits noise-word
+The lexer recognizes 21 current reserved spellings, one legacy spelling, four
+future-reserved words, and two noise words, for 28 spellings in total. The lexer emits noise-word
 tokens; any later decision to omit them from an abstract syntax tree belongs
 to a parser. Future-reserved tokens likewise carry no implemented runtime behavior.
 
@@ -165,7 +170,7 @@ does not silently convert a name into a keyword.
 \clearpage
 \section{One Unified Deterministic Automaton}
 \subsection{Representation}
-Let $Q_e$ be the 254 explicit implementation states and let $\Sigma_c$ be
+Let $Q_e$ be the 288 explicit implementation states and let $\Sigma_c$ be
 the 83 input classes, including virtual EOF. Recognition begins at $q_0$.
 The program stores $\delta$ as \code{DELTA[state][class]} and records acceptance
 in \code{ACC\_TOK}. Missing transitions use $-1$ and stop lookahead.
@@ -174,7 +179,7 @@ For a total mathematical DFA, add one implicit non-accepting sink $q_\bot$:
 M=(Q_e\cup\{q_\bot\},\Sigma_c,\delta,q_0,F),
 \qquad \delta(q_\bot,c)=q_\bot.
 \]
-Thus 254 is the stored-state count, not the size of the totalized state set.
+Thus 288 is the stored-state count, not the size of the totalized state set.
 Acceptance actions distinguish token production, whitespace skipping, and
 non-acceptance. The scanner emits EOF directly when no source remains.
 
@@ -199,7 +204,7 @@ classes. The remaining 31 classes cover digits, relevant punctuation and
 whitespace, other printable ASCII, illegal bytes, and EOF. A 256-entry map
 classifies input bytes before transition lookup.
 
-At startup, \code{build\_trie} constructs shared prefixes from the 24 reserved
+At startup, \code{build\_trie} constructs shared prefixes from the 28 reserved
 spellings. Every non-root trie node becomes two DFA states: an exact-uppercase
 state \code{E:prefix} and a folded-case state \code{F:prefix}. An exact terminal
 accepts the corresponding reserved token. A folded terminal accepts an
@@ -371,8 +376,8 @@ exhaustive input-space proof is claimed.}
 
 \begin{tabularx}{\linewidth}{@{}>{\RaggedRight\arraybackslash}p{35mm}Y@{}}
 \toprule Contract area & Checks included in the suite \\\midrule
-Reserved words & All 24 spellings, folded-case diagnostics, partial prefixes,
-and suffixes that turn keywords into identifiers. \\
+Reserved words & All 28 spellings, folded-case diagnostics, partial prefixes,
+and suffixes that turn keywords into identifiers. Switch cases exercise all four keyword tokens, the colon, and the lexical listing categories. \\
 Names and numbers & Identifier alphabet, illegal initial underscore, leading
 zeros, maximum integer, overflow, decimals, dot fallback, and number/name adjacency. \\
 Punctuation & Arithmetic, assignment, relational operators, brackets,
@@ -387,7 +392,7 @@ negative example with seven diagnostics and seven invalid entries. \\\bottomrule
 
 \subsection{Evidence boundaries}
 The tests verify selected observable behaviors, rather than every transition
-or every possible malformed input. Exporting 254 states and 83 classes confirms
+or every possible malformed input. Exporting 288 states and 83 classes confirms
 the implementation's current dimensions; it does not prove minimality of the
 automaton. Token counts are specific to the supplied files and change when
 their text changes.
@@ -406,6 +411,8 @@ From the repository root, run:
 make test
 ./build/lalgo lexical_analyzer/sample.lal
 ./build/lalgo lexical_analyzer/demo.lal t
+./build/lalgo syntax_proposal/switch_sample.lal
+make syntax
 ./publish.sh --build-only
 \end{lstlisting}
 The first command compiles the selected C99 lexer and runs the contract suite.

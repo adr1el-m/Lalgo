@@ -1,0 +1,15 @@
+// Selection by an integer menu choice.
+INTEGER choice;
+INPUT choice;
+
+SWITCH (choice) {
+    CASE 1:
+        OUTPUT "Search";
+        BREAK;
+    CASE 2:
+        OUTPUT "List";
+        BREAK;
+    DEFAULT:
+        OUTPUT "Unknown choice";
+        BREAK;
+}

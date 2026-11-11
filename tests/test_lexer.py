@@ -55,12 +55,23 @@ def main():
     def require(condition, detail):
         assert condition, detail
 
-    words = 'INTEGER DECIMAL CHARACTER BOOLEAN ARRAY STRING IF ELSE WHILE FOR INPUT OUTPUT TRUE FALSE DIV AND OR NOT ALGORITHM RETURN TRACE INVARIANT SET THE'
-    kinds = 'KW_INTEGER KW_DECIMAL KW_CHARACTER KW_BOOLEAN KW_ARRAY KW_STRING KW_IF KW_ELSE KW_WHILE KW_FOR KW_INPUT KW_OUTPUT TRUE FALSE DIV AND OR NOT RES_ALGORITHM RES_RETURN RES_TRACE RES_INVARIANT NOISE_SET NOISE_THE'.split()
-    check('all 24 reserved spellings', words, kinds)
+    words = 'INTEGER DECIMAL CHARACTER BOOLEAN ARRAY STRING IF ELSE WHILE FOR SWITCH CASE DEFAULT BREAK INPUT OUTPUT TRUE FALSE DIV AND OR NOT ALGORITHM RETURN TRACE INVARIANT SET THE'
+    kinds = 'KW_INTEGER KW_DECIMAL KW_CHARACTER KW_BOOLEAN KW_ARRAY KW_STRING KW_IF KW_ELSE KW_WHILE KW_FOR KW_SWITCH KW_CASE KW_DEFAULT KW_BREAK KW_INPUT KW_OUTPUT TRUE FALSE DIV AND OR NOT RES_ALGORITHM RES_RETURN RES_TRACE RES_INVARIANT NOISE_SET NOISE_THE'.split()
+    check('all 28 reserved spellings', words, kinds)
     check('case diagnostics and identifier suffixes', 'WHILE while While while1 WHILE_ WHIL',
           ['KW_WHILE'] + ['IDENT'] * 5,
           inspect=lambda p, r, t: require([x[5] for x in r[:-1]] == [False, True, True, False, False, False], r))
+    check('switch keyword boundaries and capitalization',
+          'SWITCH CASE DEFAULT BREAK switch Case default Break SWITCHED CASE_ DEFAULT2 BREAKFAST',
+          ['KW_SWITCH', 'KW_CASE', 'KW_DEFAULT', 'KW_BREAK'] + ['IDENT'] * 8,
+          inspect=lambda p, r, t: require(
+              [x[5] for x in r[:-1]] == [False] * 4 + [True] * 4 + [False] * 4, r))
+    check('switch keyword classes and colon',
+          'SWITCH (choice) { CASE 1: BREAK; DEFAULT: BREAK; }',
+          'KW_SWITCH LPAREN IDENT RPAREN LBRACE KW_CASE INTEGER COLON KW_BREAK SEMICOLON KW_DEFAULT COLON KW_BREAK SEMICOLON RBRACE'.split(),
+          inspect=lambda p, r, t: require(
+              all(re.search(r'^\d+\s+' + kind + r'\s+Keyword \(Control Flow\)', t, re.M)
+                  for kind in ('KW_SWITCH', 'KW_CASE', 'KW_DEFAULT', 'KW_BREAK')), t))
     check('identifier alphabet', 'a A a1 a_b Z9_', ['IDENT'] * 5)
     check('invalid identifier start', '_name', ['INVALID', 'IDENT'], code=1, errors=1)
     check('integer range and leading zeros', '0 0007 2147483647 2147483648',
@@ -94,7 +105,7 @@ def main():
     check('NUL input rejected', b'x\x00y', code=2,
           inspect=lambda p, r, t: require(t is None and 'not a plain text file' in p.stderr, p.stderr))
     check('DFA trace dimensions', 'WHILE x', ['KW_WHILE', 'IDENT'], trace=True,
-          inspect=lambda p, r, t: require('254 states, 83 character classes' in p.stdout and 'TOKEN EMITTED' in p.stdout, p.stdout))
+          inspect=lambda p, r, t: require('288 states, 83 character classes' in p.stdout and 'TOKEN EMITTED' in p.stdout, p.stdout))
     check('paper worked example exact stream', 'INTEGER low = 3.\n// boundary\nwhile low <= 5\n',
           'KW_INTEGER IDENT ASSIGN INTEGER DOT LINE_COMMENT IDENT IDENT LE INTEGER'.split(),
           inspect=lambda p, r, t: require(r == [

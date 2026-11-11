@@ -26,7 +26,7 @@ data = subprocess.check_output([str(out/'dump_dfa')], text=True)
 (out/'dfa-states.txt').write_text(data)
 lines = data.splitlines()
 count, classes = map(int, lines[0].split())
-assert count == 254 and classes == 83
+assert len(lines) == count + 1 and classes == 83
 names = list('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') + ['DIGIT','UNDERSCORE','DOT','EQ','BANG','LT','GT','SLASH','STAR','DQUOTE','SQUOTE','BACKSLASH','NEWLINE','SPACE','TAB','PLUS','MINUS','PERCENT','CARET','LPAREN','RPAREN','LBRACKET','RBRACKET','LBRACE','RBRACE','COMMA','SEMICOLON','COLON','OTHER','ILLEGAL','EOF']
 def esc(s):
     return ''.join({'_':r'\_', '&':r'\&', '%':r'\%', '#':r'\#', '{':r'\{', '}':r'\}'}.get(c,c) for c in s)
@@ -64,7 +64,7 @@ for line in lines[1:]:
     rows.append(r'$q_{'+sid+r'}$ '+r'\texttt{'+esc(name)+r'} & '+action+' & '+outgoing+r' \\')
 text=r'''\clearpage
 \section{Complete Unified DFA Transition Specification}\label{app:unified}
-This appendix exhaustively specifies the transition table built by \codeinline{lalgo\_unified.c}: 254 explicit states and 83 input classes, including virtual EOF. It is generated from the implementation during the paper build. The overview in Section~\ref{sec:unified} and the smaller category diagrams are readable projections; the tables here supply every concrete state and defined transition.
+This appendix exhaustively specifies the transition table built by \codeinline{lalgo\_unified.c}: @STATE_COUNT@ explicit states and 83 input classes, including virtual EOF. It is generated from the implementation during the paper build. The overview in Section~\ref{sec:unified} and the smaller category diagrams are readable projections; the tables here supply every concrete state and defined transition.
 
 Each uppercase and lowercase letter is a distinct class (52 classes). DIGIT denotes 0--9. The next 27 classes identify underscore, dot, assignment/equality, exclamation mark, comparisons, slashes, quotes, backslash, whitespace, arithmetic symbols, brackets and punctuation, in their named order. OTHER denotes remaining printable ASCII; ILLEGAL denotes unsupported bytes; EOF is virtual. The alphabet mapping follows the character-set section. All omitted entries are $\delta(q,c)=q_{\bot}$; the implicit non-accepting sink has $\delta(q_{\bot},c)=q_{\bot}$ for every class. Thus the mathematical transition function is total, although the implementation stores missing transitions as -1 and stops lookahead there.
 
@@ -89,5 +89,5 @@ NONE means non-accepting; SKIP is an accepting whitespace action; every token na
 '''+ '\n'.join(rows)+r'''
 \end{longtable}\endgroup
 '''
-(out/'unified_dfa_tables.tex').write_text(text)
+(out/'unified_dfa_tables.tex').write_text(text.replace('@STATE_COUNT@', str(count)))
 print(f'Exported {count} states and {classes} classes to the complete DFA appendix.')

@@ -82,7 +82,7 @@
   \end{minipage}\end{center}}
 
 \lstdefinelanguage{LAlgo}{
-  morekeywords={INTEGER,DECIMAL,CHARACTER,BOOLEAN,ARRAY,STRING,IF,ELSE,WHILE,FOR,INPUT,OUTPUT,ALGORITHM,RETURN,TRACE,INVARIANT,TRUE,FALSE,DIV,AND,OR,NOT,SET,THE},
+  morekeywords={INTEGER,DECIMAL,CHARACTER,BOOLEAN,ARRAY,STRING,IF,ELSE,WHILE,FOR,SWITCH,CASE,DEFAULT,BREAK,INPUT,OUTPUT,ALGORITHM,RETURN,TRACE,INVARIANT,TRUE,FALSE,DIV,AND,OR,NOT,SET,THE},
   sensitive=true,
   morecomment=[l]{//},
   morecomment=[s]{/*}{*/},
@@ -181,9 +181,9 @@
 
 \subsection{Overview}
 
-LAlgo is a proposed imperative domain-specific language (DSL) for expressing data structures and algorithms in readable pseudocode. The unified C lexer implements lexical recognition. Chapter~2 documents its token rules, and Chapter~3 proposes an EBNF grammar and a top-down syntax analyzer.
+LAlgo is a proposed imperative domain-specific language (DSL) for expressing data structures and algorithms in readable pseudocode. The unified C lexer implements lexical recognition. Chapter~2 documents its token rules, and Chapter~3 defines the EBNF and describes the top-down syntax checker and planned recovery.
 
-The proposed language includes declarations, input and output, assignment, conditionals, and iteration. It uses one loop kind, \kw{WHILE}, in single and nested forms. A binary-search program illustrates how these constructs work together.
+The proposed language includes declarations, input and output, assignment, selection with \kw{IF} and \kw{SWITCH}, and iteration. It uses one loop kind, \kw{WHILE}, in single and nested forms. A binary-search program illustrates how these constructs work together.
 
 \subsection{Inspiration}
 
@@ -303,7 +303,7 @@ Diagrams show only defined transitions; every missing transition goes to an impl
 \Needspace{30\baselineskip}
 \subsubsection{Unified DFA with One Start State}\label{sec:unified}
 
-The implementation in \codeinline{lalgo\_unified.c} builds one table, \codeinline{DELTA[state][class]}, with 254 explicit states and 83 input classes. Every candidate lexeme starts at the same $q_0$. Keywords, identifiers, numeric literals, operators, comments, quoted literals, delimiters, and whitespace are paths within this single state graph. There is no runtime dispatch to separate recognizers and no post-scan string comparison for keywords.
+The implementation in \codeinline{lalgo\_unified.c} builds one table, \codeinline{DELTA[state][class]}, with 288 explicit states and 83 input classes. Every candidate lexeme starts at the same $q_0$. Keywords, identifiers, numeric literals, operators, comments, quoted literals, delimiters, and whitespace are paths within this single state graph. There is no runtime dispatch to separate recognizers and no post-scan string comparison for keywords.
 
 The figure below is a grouped overview of the unified graph, not a substitute for its complete transitions. Each box denotes a state family; keyword letters and individual punctuation have distinct concrete states. Appendix~\ref{app:unified} gives every state, accepting action, and defined transition directly from the C implementation. The category diagrams that follow use local state labels as explanatory projections of these paths; they are not independently executed DFAs and their local $q_0$ denotes the same global start.
 
@@ -667,7 +667,8 @@ Every token is a record \codeinline{(type, lexeme, line, column, precededByNewli
 Identifier & \token{IDENT} \\
 Literals & \token{INTEGER, DECIMAL, STRING, CHAR, TRUE, FALSE} \\
 Type keywords & \token{KW\_INTEGER, KW\_DECIMAL, KW\_CHARACTER,}\newline\token{KW\_BOOLEAN, KW\_ARRAY, KW\_STRING} \\
-Control/I/O keywords & \token{KW\_IF, KW\_ELSE, KW\_WHILE,}\newline\token{KW\_INPUT, KW\_OUTPUT} \\
+Control keywords & \token{KW\_IF, KW\_ELSE, KW\_WHILE,}\newline\token{KW\_SWITCH, KW\_CASE, KW\_DEFAULT, KW\_BREAK} \\
+I/O keywords & \token{KW\_INPUT, KW\_OUTPUT} \\
 Legacy lexical token & \token{KW\_FOR} (excluded from Chapter~3) \\
 Operator keywords & \token{DIV, AND, OR, NOT} \\
 Arithmetic & \token{PLUS, MINUS, STAR, SLASH, PERCENT, CARET} \\
@@ -804,7 +805,7 @@ Reserved words are recognized by the lexer and cannot be used as identifiers. Th
 \midrule
 Primitive types & \kw{INTEGER}, \kw{DECIMAL}, \kw{CHARACTER}, \kw{BOOLEAN} \\
 Collection types & \kw{ARRAY}, \kw{STRING} \\
-Control flow & \kw{IF}, \kw{ELSE}, \kw{WHILE} \\
+Control flow & \kw{IF}, \kw{ELSE}, \kw{WHILE}, \kw{SWITCH}, \kw{CASE}, \kw{DEFAULT}, \kw{BREAK} \\
 Legacy lexical spelling & \kw{FOR} (excluded from Chapter~3) \\
 I/O statements & \kw{INPUT}, \kw{OUTPUT} \\
 Boolean literals & \kw{TRUE}, \kw{FALSE} \\
@@ -815,7 +816,7 @@ Future extensions (reserved only) & \kw{ALGORITHM}, \kw{RETURN}, \kw{TRACE}, \kw
 \end{tabularx}
 \end{center}
 
-The lexer recognizes 17 current reserved spellings, one legacy spelling (\kw{FOR}), and four future-reserved words. The grammar uses the current spellings and has no production for the legacy or future-reserved forms. The separate noise words \kw{SET} and \kw{THE} are also reserved.
+The lexer recognizes 21 current reserved spellings, one legacy spelling (\kw{FOR}), and four future-reserved words. The grammar uses the current spellings and has no production for the legacy or future-reserved forms. The separate noise words \kw{SET} and \kw{THE} are also reserved.
 
 \subsection{Noise Words}
 
@@ -897,11 +898,12 @@ INTEGER       x    =    100;
 Delimiters mark statement boundaries, collection bounds, grouping, and blocks in the proposed syntax.
 
 \begin{itemize}
-  \item \textbf{Parentheses \codeinline{( )}:} enclose grouped expressions and the guards of conditionals and loops.
+  \item \textbf{Parentheses \codeinline{( )}:} enclose grouped expressions, guards, and the \kw{SWITCH} selector.
   \item \textbf{Square brackets \codeinline{[ ]}:} delimit array literals and specify indexed element access.
-  \item \textbf{Curly braces \codeinline{\{ \}}:} delimit the statement blocks of conditionals and loops.
+  \item \textbf{Curly braces \codeinline{\{ \}}:} delimit conditional and loop bodies and enclose the arms of a \kw{SWITCH}.
+  \item \textbf{Colon \codeinline{:}.} Introduces a \kw{CASE} or \kw{DEFAULT} arm.
   \item \textbf{Comma \codeinline{,}:} separates declaration names and array elements and divides the two operands of mixed output.
-  \item \textbf{Semicolon \codeinline{;}:} ends a declaration, input, output, or assignment statement in Chapter~3.
+  \item \textbf{Semicolon \codeinline{;}:} ends a declaration, input, output, assignment, or switch-arm \kw{BREAK} in Chapter~3.
 \end{itemize}
 
 \subsection{Free-Field Format}
@@ -1042,6 +1044,11 @@ INTEGER firstElement = numbers[0];
 The lexer recognizes the words, operators, and delimiters that Chapter~3 assembles into statements. The following binary-search illustration uses the proposed syntax, including semicolons after simple statements and brace-delimited control blocks. It uses mixed output to show the matching index.
 
 \lstinputlisting{syntax_proposal/binary_search.lal}
+
+\subsubsection{Switch selection}
+The lexer emits distinct keyword tokens for \kw{SWITCH}, \kw{CASE}, \kw{DEFAULT}, and \kw{BREAK}. It also emits \token{COLON} after each case label or default keyword. The parser checks the structure in Chapter~3.
+
+\lstinputlisting{syntax_proposal/switch_sample.lal}
 
 \input{syntax_proposal/chapter.tex}
 

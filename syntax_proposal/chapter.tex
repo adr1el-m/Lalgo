@@ -2,7 +2,7 @@
 \section{Syntax Grammar Rules Proposal (EBNF)}
 \label{sec:syntax-proposal}
 
-This chapter defines the LAlgo syntax proposed for 12 November 2026. It covers declarations, input, output, assignment, selection, and iteration. The language uses \kw{WHILE} for both a single loop and nested loops. The current C lexer supplies the token stream for the proposed syntax analyzer.
+This chapter defines the LAlgo syntax proposed for 12 November 2026. It covers declarations, input, output, assignment, selection, and iteration. The language uses \kw{WHILE} for both a single loop and nested loops. The C lexer supplies the terminal stream used by the executable EBNF checker. The selection forms include \kw{SWITCH} as well as the three \kw{IF} forms.
 
 \subsection{Grammar contract}
 
@@ -10,7 +10,7 @@ This chapter defines the LAlgo syntax proposed for 12 November 2026. It covers d
   \item \textbf{Start symbol.} \codeinline{Program} matches a sequence of statements followed by \codeinline{EOF}. A \codeinline{Block} is a brace-delimited sequence of statements and may be empty.
   \item \textbf{Terminals.} Quoted words and punctuation match their exact token spellings. Keywords use uppercase. The unquoted terminals below match lexer token categories.
   \item \textbf{Nonterminals.} Every name on the left of \codeinline{=} in the numbered EBNF is a nonterminal. Each numbered production has one designated example in Section~\ref{sec:rule-examples}.
-  \item \textbf{Statement boundaries.} Declarations, input, output, and assignments end with a semicolon. A conditional ends after the last block in its complete chain. A loop ends at its matching closing brace. A line break is whitespace, including between \kw{ELSE} and \kw{IF}.
+  \item \textbf{Statement boundaries.} Declarations, input, output, and assignments end with a semicolon. A conditional ends after the last block in its complete chain. A loop or \kw{SWITCH} ends at its matching closing brace. Each switch arm ends in \codeinline{BREAK;}. A line break is whitespace, including between \kw{ELSE} and \kw{IF}.
 \end{itemize}
 
 \begin{tabularx}{\linewidth}{@{}L{39mm}Y@{}}
@@ -47,25 +47,33 @@ Output & R06--R08 & Text only, reference value only, and text followed by a comm
 Assignment & R10--R12 & Variable, literal constant, and expression as the assigned value. \\
 Declaration & R14--R16 & One name, a comma-separated list of names of one type, and one initialized name. \\
 Condition & R20--R22 & Single \kw{IF}, \kw{IF}--\kw{ELSE}, and \kw{IF} with one or more \kw{ELSE IF} clauses and a final \kw{ELSE}. \\
+Switch selection & R42--R45 & A reference selector, one or more labeled cases, and one final default arm. Each arm ends in \codeinline{BREAK;}. \\
 Iteration & R26--R27 & One \kw{WHILE} kind with a loop-free body or a body containing another \kw{WHILE}. \\
 \bottomrule
 \end{tabularx}
 
 Declaration with initialization starts with a type keyword. Plain assignment starts with a reference or optional \kw{SET}. The optional \kw{THE} appears immediately after \kw{OUTPUT}. These two noise words have no effect on the statement's meaning.
 
+\subsection{Switch and case selection}
+\kw{SWITCH} takes a reference as its selector. The braces enclose one or more \kw{CASE} arms followed by exactly one \kw{DEFAULT}. A colon introduces each arm body, which can contain zero or more statements, including nested switches. Every arm ends in \codeinline{BREAK;}. This terminator belongs to the innermost switch arm.
+
+A case label is a signed or unsigned integer literal, a character literal, a string literal, or a Boolean literal. The proposed execution selects the matching arm or the default arm, then exits the switch at the arm's \kw{BREAK}. Case-label uniqueness and compatibility with the selector's type belong to the semantic stage.
+
 \subsection{Parsing approach and token handoff}
 
-The proposed analyzer uses \textbf{top-down recursive descent}. Its token cursor reads one terminal at a time from the lexer's in-memory token sequence. It retains line and column information, skips comment records, and reports lexical diagnostics separately. The lexer also writes \codeinline{Symbol Table.txt} for lexical checking. The cursor retains \token{EOF} from memory.
+The analyzer design uses \textbf{top-down recursive descent}. Its token cursor reads one terminal at a time from the lexer's in-memory token sequence. It retains line and column information, skips comment records, and reports lexical diagnostics separately. The lexer also writes \codeinline{Symbol Table.txt} for lexical checking. The cursor retains \token{EOF} from memory.
+
+The current checker runs the C lexer in \codeinline{p} mode and consumes its tab-separated terminal records in source order. Each record supplies token type, line, column, and lexeme. It checks the full program against the same EBNF printed above using top-down recognition. Run \codeinline{make syntax} for the switch example or pass a different file with \codeinline{SOURCE=path.lal}. The current checker reports lexical errors or the farthest syntax mismatch. The next subsection specifies the planned recovery behavior.
 
 The cursor collects terminals one at a time through the statement's terminator. It tracks delimiters so a semicolon inside a control block stays with that block. At the closing brace of an \kw{IF} or \kw{ELSE IF} body, one terminal of lookahead determines whether \kw{ELSE} extends the statement. Once the statement boundary is reached, recursive descent validates the collected terminals and the statements within any nested blocks.
 
-The first terminal selects the statement family. A declaration's separator distinguishes a single name, list, or initializer. After \kw{OUTPUT}, a string followed by a comma selects the mixed form. An assignment is classified from the complete shape of its right-hand expression. A conditional chain with an \kw{ELSE IF} requires a final \kw{ELSE}. For a \kw{WHILE}, the parsed body determines which loop rule applies. The analyzer shares common prefixes and records the corresponding named production in the tree.
+The first terminal selects the statement family. A declaration's separator distinguishes a single name, list, or initializer. After \kw{OUTPUT}, a string followed by a comma selects the mixed form. An assignment is classified from the complete shape of its right-hand expression. A conditional chain with an \kw{ELSE IF} requires a final \kw{ELSE}. For a \kw{WHILE}, the parsed body determines which loop rule applies. For \kw{SWITCH}, the grammar requires each arm terminator and its final default arm. The analyzer shares common prefixes and records the corresponding named production in the tree.
 
 \subsection{Syntax errors and panic recovery}
 
-On a syntax error, report the unexpected token and the expected token or construct, with its line and column. For example, the proposed format is \codeinline{Syntax error on line 3, column 1: expected ';' after assignment.}
+The planned recovering parser will report the unexpected token and the expected token or construct, with its line and column. For example, the proposed format is \codeinline{Syntax error on line 3, column 1: expected ';' after assignment.}
 
-Panic recovery discards the damaged part of the statement. The recovery scan tracks grouping and block delimiters and looks for a semicolon, the current block's closing brace, or EOF at a suitable nesting level. It may also resume at an unambiguous next statement starter at the same level, such as a type or I/O keyword after a missing semicolon. The parser consumes a synchronizing semicolon but leaves a closing brace for the enclosing block. Each recovery step consumes input or returns control to an enclosing rule. The analyzer continues checking later statements and reports failure for the complete program if any error was recorded.
+The planned panic recovery discards the damaged part of the statement. The recovery scan tracks grouping and block delimiters and looks for a semicolon, the current block's closing brace, or EOF at a suitable nesting level. It may also resume at an unambiguous next statement starter at the same level, such as a type or I/O keyword after a missing semicolon. The parser consumes a synchronizing semicolon but leaves a closing brace for the enclosing block. Each recovery step consumes input or returns control to an enclosing rule. The analyzer continues checking later statements and reports failure for the complete program if any error was recorded.
 
 Semantic checking is scheduled separately. It will use the syntax tree to check types and declarations and maintain semantic symbol-table entries. The grammar examples demonstrate syntactic form, so an identifier in a fragment can stand for an already-declared name.
 

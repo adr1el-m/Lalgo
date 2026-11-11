@@ -23,6 +23,7 @@
  * BUILD :  gcc -std=c99 -Wall -Wextra -o lalgo lalgo_unified.c
  * RUN   :  ./lalgo sample.lal        token table + lexical errors on screen,
  *                                    "Symbol Table.txt" written
+ *          ./lalgo sample.lal p      tab-separated terminal stream for the parser
  *          ./lalgo sample.lal t      same, plus the step-by-step DFA trace
  *                                    (tip: add  > trace.txt  to save it)
  */
@@ -46,6 +47,8 @@
     X(KW_STRING, "Keyword (Data Type)")                                        \
     X(KW_IF, "Keyword (Control Flow)") X(KW_ELSE, "Keyword (Control Flow)")    \
     X(KW_WHILE, "Keyword (Control Flow)") X(KW_FOR, "Keyword (Control Flow)")  \
+    X(KW_SWITCH, "Keyword (Control Flow)") X(KW_CASE, "Keyword (Control Flow)")  \
+    X(KW_DEFAULT, "Keyword (Control Flow)") X(KW_BREAK, "Keyword (Control Flow)") \
     X(KW_INPUT, "Keyword (I/O)") X(KW_OUTPUT, "Keyword (I/O)")                 \
     X(DIV, "Arithmetic Operator") X(AND, "Boolean Operator (Logical)")         \
     X(OR, "Boolean Operator (Logical)") X(NOT, "Boolean Operator (Logical)")   \
@@ -194,6 +197,8 @@ static const KwDef KEYWORDS[] = {
     {"CHARACTER", T_KW_CHARACTER}, {"BOOLEAN", T_KW_BOOLEAN},
     {"ARRAY", T_KW_ARRAY}, {"STRING", T_KW_STRING},
     {"IF", T_KW_IF}, {"ELSE", T_KW_ELSE}, {"WHILE", T_KW_WHILE},
+    {"SWITCH", T_KW_SWITCH}, {"CASE", T_KW_CASE},
+    {"DEFAULT", T_KW_DEFAULT}, {"BREAK", T_KW_BREAK},
     {"FOR", T_KW_FOR}, {"INPUT", T_KW_INPUT}, {"OUTPUT", T_KW_OUTPUT},
     {"TRUE", T_TRUE}, {"FALSE", T_FALSE},
     {"DIV", T_DIV}, {"AND", T_AND}, {"OR", T_OR}, {"NOT", T_NOT},
@@ -749,11 +754,11 @@ int main(int argc, char **argv)
     FILE *f, *sym;
     Lexer lx;
     long n, r, w;
-    int i, count, invalid;
+    int i, count, invalid, parser_tokens;
     char buf[64], big[1100];
 
     if (argc < 2) {
-        fprintf(stderr, "usage: %s <source.lal> [t]\n", argv[0]);
+        fprintf(stderr, "usage: %s <source.lal> [t|p]\n", argv[0]);
         return 2;
     }
     if (!has_lal_ext(argv[1])) {
@@ -761,6 +766,7 @@ int main(int argc, char **argv)
         return 2;
     }
     trace_on = (argc >= 3 && argv[2][0] == 't');   /* 't' = show DFA trace */
+    parser_tokens = argc >= 3 && argv[2][0] == 'p' && argv[2][1] == '\0';
     g_out = stdout;
 
     f = fopen(argv[1], "rb");
@@ -807,19 +813,32 @@ int main(int argc, char **argv)
     }
     scan(&lx);
 
-    /* ---- token table ---- */
-    printf("=== TOKENS ===\n");
-    printf("%-8s %-14s %-24s %-8s %s\n", "line:col", "type", "lexeme", "newline", "suspectedKeyword");
-    for (i = 0; i < ntoks; i++)
-        printf("%3d:%-4d %-14s %-24s %-8s %s\n",
-               toks[i].line, toks[i].col, TOKEN_NAMES[toks[i].type],
-               shown(&toks[i], buf, 24), toks[i].nl_before ? "TRUE" : "FALSE",
-               toks[i].suspected ? "TRUE" : "");
+    if (parser_tokens) {
+        for (i = 0; i < ntoks; i++) {
+            const Token *token = &toks[i];
+            if (!is_aux_token(token->type))
+                printf("%s\t%d\t%d\t%s\n", TOKEN_NAMES[token->type],
+                       token->line, token->col, token->lexeme);
+        }
+        for (i = 0; i < nerrs; i++)
+            fprintf(stderr, "Lexical error on line %d, column %d: %s\n",
+                    errs[i].line, errs[i].col, errs[i].msg);
+    } else {
+        /* ---- token table ---- */
+        printf("=== TOKENS ===\n");
+        printf("%-8s %-14s %-24s %-8s %s\n", "line:col", "type", "lexeme", "newline", "suspectedKeyword");
+        for (i = 0; i < ntoks; i++)
+            printf("%3d:%-4d %-14s %-24s %-8s %s\n",
+                   toks[i].line, toks[i].col, TOKEN_NAMES[toks[i].type],
+                   shown(&toks[i], buf, 24), toks[i].nl_before ? "TRUE" : "FALSE",
+                   toks[i].suspected ? "TRUE" : "");
 
-    /* ---- lexical errors ---- */
-    printf("\n=== LEXICAL ERRORS: %d ===\n", nerrs);
-    for (i = 0; i < nerrs; i++)
-        printf("line %d, col %d: %s\n", errs[i].line, errs[i].col, errs[i].msg);
+        /* ---- lexical errors ---- */
+        printf("\n=== LEXICAL ERRORS: %d ===\n", nerrs);
+        for (i = 0; i < nerrs; i++)
+            printf("line %d, col %d: %s\n", errs[i].line, errs[i].col, errs[i].msg);
+
+    }
 
     /* ---- Symbol Table (plain-text output file) ---- */
     sym = fopen(SYMTAB_FILE, "w");
@@ -840,7 +859,8 @@ int main(int argc, char **argv)
     }
     fprintf(sym, "\nTotal entries: %d (invalid: %d)\n", count, invalid);
     fclose(sym);
-    printf("\nSymbol table written to %s (%d entries)\n", SYMTAB_FILE, count);
+    if (!parser_tokens)
+        printf("\nSymbol table written to %s (%d entries)\n", SYMTAB_FILE, count);
 
     return nerrs > 0 ? 1 : 0;
 }

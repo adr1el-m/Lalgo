@@ -23,3 +23,9 @@ WHILE (total < 4) {
     WHILE (repeat) { repeat = FALSE; }
     total = total + 1;
 }
+
+SWITCH (age) {
+    CASE 0: OUTPUT "Zero"; BREAK;
+    CASE 18: OUTPUT "Eighteen"; BREAK;
+    DEFAULT: OUTPUT "Other age"; BREAK;
+}

@@ -39,5 +39,9 @@
   "Primary": "(value)",
   "Reference": "numbers[mid]",
   "Literal": "'A'",
-  "ArrayLiteral": "[2, 4]"
+  "ArrayLiteral": "[2, 4]",
+  "SwitchStmt": "SWITCH (choice) { CASE 1: BREAK; DEFAULT: BREAK; }",
+  "SwitchCase": "CASE 'A': OUTPUT \"Accepted\"; BREAK;",
+  "SwitchDefault": "DEFAULT: OUTPUT \"Unknown\"; BREAK;",
+  "CaseLabel": "-7"
 }

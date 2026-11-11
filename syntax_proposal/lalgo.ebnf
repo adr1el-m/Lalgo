@@ -19,7 +19,7 @@ DeclareList = Type, IDENT, ",", IDENT, { ",", IDENT }, ";" ;
 DeclareInit = Type, IDENT, "=", Expression, ";" ;
 Type = "INTEGER" | "DECIMAL" | "CHARACTER" | "BOOLEAN" | "ARRAY" | "STRING" ;
 
-Conditional = IfOnly | IfElse | IfChain ;
+Conditional = IfOnly | IfElse | IfChain | SwitchStmt ;
 IfHead = "IF", "(", Expression, ")", Block ;
 IfOnly = IfHead ;
 IfElse = IfHead, "ELSE", Block ;
@@ -45,3 +45,8 @@ Primary = Literal | Reference | "(", Expression, ")" | ArrayLiteral ;
 Reference = IDENT, [ "[", Expression, "]" ] ;
 Literal = INT_LIT | DEC_LIT | CHAR_LIT | STR_LIT | "TRUE" | "FALSE" ;
 ArrayLiteral = "[", [ Expression, { ",", Expression } ], "]" ;
+
+SwitchStmt = "SWITCH", "(", Reference, ")", "{", SwitchCase, { SwitchCase }, SwitchDefault, "}" ;
+SwitchCase = "CASE", CaseLabel, ":", { Statement }, "BREAK", ";" ;
+SwitchDefault = "DEFAULT", ":", { Statement }, "BREAK", ";" ;
+CaseLabel = [ "-" ], INT_LIT | CHAR_LIT | STR_LIT | "TRUE" | "FALSE" ;

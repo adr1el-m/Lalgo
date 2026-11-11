@@ -38,35 +38,32 @@
 \newcommand{\profquote}[2]{\neutralbox{\textbf{Ma'am:} ``#1''\par{\footnotesize\color{muted}#2}}}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyfoot[L]{\footnotesize\color{muted}5 November 2026 meeting notes}
+\fancyfoot[L]{\footnotesize\color{muted}LAlgo team guide}
 \fancyfoot[R]{\small\color{maroon}\thepage\,/\,6}
 \renewcommand{\headrulewidth}{0pt}
 \begin{document}
 
 {\fontsize{23}{28}\selectfont\bfseries\color{maroon}LAlgo: what we need to do\par}
-{\small\color{muted}A quick guide for the team | 5 November 2026\par}
+{\small\color{muted}Team guide | Switch and case revision\par}
 \vspace{2mm}
 
 \section{1. What matters now}
-The lexical analyzer is working locally. Our main work is to turn the proposed
-language forms into a \textbf{formal grammar and a working syntax analyzer}.
+The lexer and EBNF checker support \code{SWITCH}, \code{CASE}, \code{DEFAULT}, and \code{BREAK}. Run \code{make syntax} to check the switch sample.
 This guide condenses the four recordings and the checking rubrics. Short,
 timestamped excerpts support the requirements; full transcripts stay in the meeting notes.
 
 \readybox{\good\ means the stated portion exists in the current source or documentation.
-\textbf{It is not an instructor grade.} The lexer passes \textbf{31/31 local tests}.}
+The lexer passes \textbf{33/33 local tests}, and the syntax checker passes \textbf{13/13 CLI tests}.}
 \focusbox{\todo\ means missing work, partial coverage, or a decision we still need to settle.
-A keyword or sample program does not establish a working parser.}
+Use the syntax checker to demonstrate the implemented grammar.}
 
-\subsection{Settle these scope decisions first}
+\subsection{Language decisions for checking}
 \begin{enumerate}
-\item \textcolor{focus}{\textbf{Choose one loop kind: \code{WHILE} or \code{FOR}.}}
-Support both \textbf{single and nested} uses of that chosen kind. The current design lists both kinds.
+\item \textbf{Use \code{WHILE} for single and nested loops.} The EBNF covers both forms.
 \item \textcolor{focus}{\textbf{Keep language features through iteration only.}}
 Review future-reserved \code{ALGORITHM}, \code{RETURN}, \code{TRACE}, and \code{INVARIANT};
 do not expand them into extra supported constructs for this scope.
-\item \textcolor{focus}{\textbf{Keep declarations in the work plan.}}
-They are already in LAlgo's proposal. Define their grammar and parsing behavior.
+\item \textbf{Show \code{SWITCH} during checking.} Use a reference selector, at least one case, one final default, and \code{BREAK;} at the end of every arm.
 \end{enumerate}
 
 \profquote{Kung FOR or WHILE, bahala kayo. Pero ang rule niya, dalawa.}{Recording 04, 05:24--05:46. She then names single and nested loops.}
@@ -99,7 +96,7 @@ detailed scoring weights are not supplied in these materials. The semantic guide
 \textbf{\#} & \textbf{Area} & \textbf{Existing evidence --- \textcolor{ready}{READY}} \\\midrule
 1 & Input restriction & Accepts \code{.lal} / \code{.LAL}; rejects other extensions before opening the source. Rejects NUL-containing input. \\
 2 & Identifiers & Letter first; then letters, digits, or underscores. Case-sensitive. \\
-3 & Keywords & Recognizes the current type, control-flow, and input/output vocabulary through the unified DFA. \\
+3 & Keywords & The unified DFA recognizes \code{SWITCH}, \code{CASE}, \code{DEFAULT}, and \code{BREAK} as control-flow keywords. \\
 4 & Reserved words & Reserved spellings and separate future-reserved token classes exist. Their final scope needs review below. \\
 5 & Constant values & Five categories: integer, decimal, character, string, Boolean. \code{TRUE}/\code{FALSE} count as one category. \\
 6 & Noise words & Recognizes \code{SET} and \code{THE}. \\
@@ -115,8 +112,7 @@ detailed scoring weights are not supplied in these materials. The semantic guide
 
 \subsection{Focus before presenting this as complete}
 \begin{itemize}
-\item \textcolor{focus}{\textbf{Align the vocabulary.}} Resolve the loop choice and the future-reserved words
-against the iteration scope boundary. Explain keyword versus reserved-word terminology.
+\item \textbf{Show the keyword tokens and the colon.} Use \code{switch\_sample.lal} and its symbol table during checking.
 \item \textcolor{focus}{\textbf{Resolve rubric interpretation.}} The extension filter works, but global
 uniqueness of \code{.lal} is unverified. Confirm the intended keyword/reserved distinction
 and nine-Boolean-operator classification.
@@ -129,20 +125,20 @@ all token categories, malformed input, and the generated \code{Symbol Table.txt}
 The blank rubric scores remain Ma'am's assessment.}
 
 \clearpage
-\section{3. Syntax: what we still need}
-\focusbox{\todo\ \textbf{All statement families still need formal grammar and parser support.}
-Existing snippets provide examples, but no implemented syntax analyzer is present.}
+\section{3. Syntax forms for checking}
+\readybox{\good\ \textbf{The EBNF and syntax checker cover the listed forms.}
+The four switch rules are R42--R45 in Chapter 3.}
 
 {\small\renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\linewidth}{@{}L{29mm}Y L{35mm}@{}}
 \toprule
-\textbf{Family} & \textbf{Coverage Ma'am expects} & \textbf{Our next action} \\\midrule
-Input /1 & One input construct; its rule design is up to us. & \todo\ Define \code{INPUT}'s grammar. \\
-Output /3 & String only; variable value only; string plus variable value. & \todo\ Define combined output; cover all three forms. \\
-Assignment /3 & Variable to variable; constant to variable; expression result to variable. & \todo\ Cover all three plain-assignment forms. \\
-Condition /3 & Single IF; IF--ELSE; IF--ELSE IF--ELSE chain. & \todo\ Define all three IF forms. \\
-Iteration /2 & Single loop and nested loops, using one chosen loop kind. & \todo\ Choose FOR or WHILE; cover nesting. \\
-Declaration & Required for us because it is already proposed. Discuss single-variable, list, and initialized forms. & \todo\ Define declarations and list syntax. \\\bottomrule
+\textbf{Family} & \textbf{Coverage Ma'am expects} & \textbf{Local status} \\\midrule
+Input /1 & One input construct; its rule design is up to us. & \good\ Input rule \\
+Output /3 & String only; variable value only; string plus variable value. & \good\ Three forms \\
+Assignment /3 & Variable to variable; constant to variable; expression result to variable. & \good\ Three forms \\
+Selection & The three IF forms and \code{SWITCH} with labeled cases and a default. & \good\ IF and SWITCH \\
+Iteration /2 & Single loop and nested loops, using one chosen loop kind. & \good\ WHILE, both forms \\
+Declaration & Required for us because it is already proposed. Discuss single-variable, list, and initialized forms. & \good\ Three forms \\\bottomrule
 \end{tabularx}}
 
 \profquote{One example for every rule in that statement.}{Recording 02, 01:02--01:08. Each rule needs its own matching example.}
@@ -154,7 +150,7 @@ and a grammar start symbol. The lexer's \code{q0} is not that start symbol.
 \item \textcolor{focus}{\textbf{A distinct matching example:}} three examples of a single IF do not cover
 three different conditional forms. Cover additional applicable rules too.
 \item \textcolor{focus}{\textbf{Leftmost and rightmost derivations:}} apply the actual written productions
-until the example is obtained. Include the requested parse-tree/arrow-based derivation display.
+until the example is obtained. Show both complete derivations and one shared parse tree.
 \end{enumerate}
 
 \readybox{\good\ \textbf{Documented groundwork only:} token vocabulary, expression examples,
@@ -167,28 +163,25 @@ fixed on the screen; Ma'am tentatively discusses three forms. Her printf example
 force C-style formatting in LAlgo.}
 
 \clearpage
-\section{4. Build the parser}
+\section{4. Demonstrate the syntax checker}
 \readybox{\good\ \textbf{Available foundation:} the lexer stores token type, lexeme, line, and column
 in memory and creates EOF. Ma'am permits an \textbf{in-memory handoff}, one grammar terminal
 at a time. Continue generating \code{Symbol Table.txt} for the lexical rubric.}
 
-\subsection{Required work --- all marked Focus}
+\subsection{What to show during checking}
 \begin{description}[style=nextline,leftmargin=0pt,labelindent=0pt,labelwidth=0pt,labelsep=0pt,itemsep=5pt]
-\item[\textcolor{focus}{1. Define the terminal interface.}]
-Expose sequential token consumption, including EOF and source positions. Decide how
-comments, invalid entries, and noise words are handled. Define statement boundaries.
-\item[\textcolor{focus}{2. Select and implement a parser algorithm.}]
-Recursive descent is an accepted example, not the only permitted algorithm. Document the
-chosen approach and make it enforce our grammar, precedence, and nesting.
-\item[\textcolor{focus}{3. Show derivations for valid syntax.}]
-Provide the requested production/derivation output. A lexical DFA trace does not satisfy
-this requirement. Check every required statement form on page 3.
-\item[\textcolor{focus}{4. Name and implement error recovery.}]
-Ma'am illustrates panic recovery. Choose grammar-appropriate synchronization points and
-show that checking continues after an invalid statement. Retain the overall error result.
-\item[\textcolor{focus}{5. Make syntax errors brief and useful.}]
-Include location and the reason or expected construct. Her example is ``Syntax error at
-line 15, semicolon expected.'' It does not itself mandate semicolons in our grammar.
+\item[\textcolor{ready}{1. Scan the switch sample.}]
+Run \code{./build/lalgo syntax\_proposal/switch\_sample.lal}. Show the four keyword
+tokens, colon delimiters, and the generated symbol table.
+\item[\textcolor{ready}{2. Check the syntax.}]
+Run \code{make syntax}. The checker reads the C lexer terminal stream and checks the
+same EBNF printed in the proposal. It accepts nested switches and requires a final default.
+\item[\textcolor{ready}{3. Show the derivations and a diagnostic.}]
+Use R42--R45 for the derivations and parse trees. Remove a case colon or arm terminator
+in a scratch copy to show a syntax error with its line, column, and expected token.
+\item[\textcolor{focus}{4. Implement panic recovery.}]
+The checker currently reports the farthest mismatch. The proposed recovery stage will
+resume checking later statements after an error.
 \end{description}
 
 \profquote{The error message must be brief and concise, but it will further give the programmer the reason why there is such an error.}{Recording 04, 07:38--07:48. Include a useful reason, not just ``syntax error.''}
@@ -198,24 +191,24 @@ line 15, semicolon expected.'' It does not itself mandate semicolons in our gram
 Their usefulness depends on the approach we choose. Existing lexical DFA diagrams and the
 \code{DELTA} transition table are different artifacts.}
 
-\subsection{Recommended team handoff order}
+\subsection{Team handoff}
 \begin{enumerate}
-\item \textbf{Agree:} one loop kind, supported statement forms, output/list syntax, boundaries,
-and reserved vocabulary. Compare relevant C/Java operations; Python is optional.
-\item \textbf{Document:} Part 3 grammar plus a rule-to-example-and-derivation checklist.
-Preserve the existing worked lexical example when reorganizing the specification.
-\item \textbf{Implement and check:} parser interface, required syntax, derivation output,
-error recovery, and concise diagnostics. Include single/nested-loop cases and malformed input.
+\item \textbf{Bring the current proposal.} Chapter 3 contains the grammar and the 45
+examples, each with two derivations and one shared parse tree.
+\item \textbf{Show the checking evidence.} Run the lexer and syntax checker on the switch
+sample. Use a malformed scratch copy for diagnostics.
+\item \textbf{Prepare the next stage.} Define selector and case types, check duplicate case
+labels, and add recovery that resumes after syntax errors.
 \end{enumerate}
 
 {\footnotesize\color{muted}
 \textbf{Where this comes from.} The 5 November recordings 01--04, the lexical, syntax, and semantic checking guides,
-and Adriel's reported iteration scope limit. Current source baseline:
-\code{e042368}; lexer tests: 31/31 locally. Quoted excerpts are lightly edited machine-assisted transcriptions; recording numbers follow
+and Adriel's reported iteration scope limit. Current status reflects the
+switch and case revision. Quoted excerpts are lightly edited machine-assisted transcriptions; recording numbers follow
 the supplied files 1--4, with timestamps restarting per file. The iteration scope limit was
 reported by Adriel without a verified audio timestamp. Full transcripts and audit notes remain in the
 \href{https://github.com/adr1el-m/Lalgo/blob/main/docs/meetings/2026-11-05-meeting.md}{unified meeting notes}.
-This is a planning guide, not an instructor-approved grade or completed grammar/parser.}
+Course scores are reported separately from local validation.}
 
 \clearpage
 \section{5. Ma'am's syntax checking table}

@@ -70,7 +70,7 @@ ARGS=(
   --author "Buenaventura, Harvey L.; De Mesa, Joshua C.; Dela Rosa, Mico Von Adriel A.; Magalona, Adriel M.; Morales, Timothy Gabriel; Nevado, Sean Andrew M.; Salvacion, Dean James G."
   --subject "Programming Languages"
   --tags "LAlgo,Programming Languages,Finite Automata,Lexical Analysis,Algorithms"
-  --abstract "LAlgo lexical specification and EBNF syntax proposal with a unified lexer, numbered rule examples, leftmost and rightmost parse trees, and a top-down parser design."
+  --abstract "LAlgo lexical specification and EBNF syntax proposal with a unified lexer, numbered examples, both derivations, one parse tree per example, and SWITCH selection."
   --source LAlgo_Language_Design_Specification.pdf
   --yes
 )

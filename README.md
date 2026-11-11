@@ -1,6 +1,6 @@
 # Lalgo
 
-**LAlgo** is a programming-language project for Principles of Programming Languages (COSC 303), BSCS 3-1, Group 4, at the Polytechnic University of the Philippines. Its current working component is a **C99 lexical analyzer built around one unified DFA**.
+**LAlgo** is a programming-language project for Principles of Programming Languages (COSC 303), BSCS 3-1, Group 4, at the Polytechnic University of the Philippines. The project includes a **C99 lexer built around one unified DFA** and a **top-down EBNF syntax checker**.
 
 The repository brings together the original proposal, evolving language specification, selected lexer, examples, validation suite, and a separate implementation paper. The timeline below records the documented milestones leading to the current snapshot.
 
@@ -10,16 +10,17 @@ The repository brings together the original proposal, evolving language specific
 | --- | --- |
 | [Lexer paper](LAlgo_Lexer_Paper.pdf) | Design, implementation, worked token stream, recovery rules, local validation, and limitations; [editable LaTeX](lalgo_lexer_paper.tex). |
 | [12 November proposal](LAlgo_Language_Design_Specification.pdf) | Revised Chapters 1 and 2, Chapter 3 EBNF, one example, two derivations, and one parse tree per rule, and the lexer appendices. [LaTeX source](lalgo_language_specification.tex). |
-| [Unified lexer](lexical_analyzer/lalgo_unified.c) | Selected implementation: one start state, 254 explicit states, 83 input classes, integrated keyword paths, trace mode, and token listing. |
+| [Unified lexer](lexical_analyzer/lalgo_unified.c) | Selected implementation: one start state, 288 explicit states, 83 input classes, integrated keyword paths, trace mode, and token listing. |
+| [Switch example](syntax_proposal/switch_sample.lal) | Demonstrates the required `SWITCH`, `CASE`, `DEFAULT`, and `BREAK` forms. Run `make syntax`. |
 | [Earlier lexer](lexical_analyzer/lalgo_lexer.c) | Retained for historical comparison; the default build and validation target the unified implementation. |
 | [Examples](lexical_analyzer/) | `sample.lal` (binary search), `demo.lal` (additional forms), and `bad.lal` (intentional lexical errors). |
-| [Validation](docs/VALIDATION.md) | 31 local black-box cases; reproducible with `make test`. |
+| [Validation](docs/VALIDATION.md) | 33 lexer checks and 13 syntax CLI checks. Run `make test`. |
 
-The C implementation covers **lexical analysis**. Chapter 3 defines the proposed grammar, statement boundaries, and top-down parser design. Its document generator verifies the examples using the actual C lexer and a separate grammar recognizer. The integrated parser, semantic analyzer, and runtime remain future work. The [submission checklist](docs/SUBMISSION-2026-11-12.md) records the announcement requirements and the local verification.
+Chapter 3 defines 45 EBNF rules with one example, both complete derivations, and one parse tree per rule. The syntax checker uses the same EBNF and the C lexer's terminal stream. The switch design requires at least one case, one final default, and `BREAK;` in every arm. `WHILE` remains the sole loop kind. Semantic validation, execution, and syntax panic recovery are later stages. See the [checking comparison](docs/SWITCH-CHECKING.md) and [submission checklist](docs/SUBMISSION-2026-11-12.md).
 
 ## Team guide
 
-For the 12 November submission, use the current proposal above. For the 5 November discussion, start with the [guide on the papers site](https://papers.adrielmagalona.com/paper/lalgo-team-requirements-guide/read) or the [six-page PDF](LAlgo_Team_Requirements_Guide.pdf). It keeps the papers' maroon-and-cream colors in a simple team-note layout, with green **Ready** labels for existing portions, and red **Focus** labels for missing work or decisions. It includes deadlines, scope limits, lexical/syntax coverage, Ma'am's syntax and semantic checking tables, and the team's next steps, with short timestamped quotes instead of full transcripts. [Editable LaTeX](lalgo_team_guide.tex).
+For the 12 November submission, use the current proposal above. For the checking requirements and current status, see the [guide on the papers site](https://papers.adrielmagalona.com/paper/lalgo-team-requirements-guide/read) or the [six-page PDF](LAlgo_Team_Requirements_Guide.pdf). It keeps the papers' maroon-and-cream colors in a simple team-note layout, with green **Ready** labels for existing portions, and red **Focus** labels for missing work or decisions. It includes deadlines, scope limits, lexical/syntax coverage, Ma'am's syntax and semantic checking tables, and the team's next steps, with short timestamped quotes instead of full transcripts. [Editable LaTeX](lalgo_team_guide.tex).
 
 Rebuild with `make guide` or `./publish.sh --meeting-guide-only --build-only`. The guide's optional website-publishing route is `./publish.sh --meeting-guide-only` (use `--no-push` for a local website draft).
 
@@ -73,6 +74,9 @@ Requirements for the lexer: a C99 compiler, Make, and Python 3 for validation. N
 make test
 ./build/lalgo lexical_analyzer/sample.lal
 ./build/lalgo lexical_analyzer/demo.lal t
+./build/lalgo syntax_proposal/switch_sample.lal
+make syntax
+make syntax SOURCE=syntax_proposal/checking_sample.lal
 ```
 
 `make test` compiles the selected source with `-std=c99 -Wall -Wextra -Wpedantic -Werror` and runs the checks. `make lexer` builds just the executable.
@@ -124,7 +128,7 @@ Lalgo/
 
 ## Next milestones
 
-- Implement the proposed recursive-descent parser and connect its terminal cursor to the C lexer.
+- Add panic recovery to the syntax-checking stage and demonstrate continued analysis after an error.
 - Add semantic rules, scope/type checking, and expression evaluation.
 - Specify runtime behavior for algorithm execution and the future-reserved vocabulary.
 - Expand validation beyond the current local contract suite.
