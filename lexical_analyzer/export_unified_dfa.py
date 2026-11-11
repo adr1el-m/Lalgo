@@ -1,6 +1,7 @@
 """Generate the paper's complete DFA appendix from the selected C implementation."""
 from pathlib import Path
 import json
+import os
 import subprocess
 
 project = Path(__file__).resolve().parents[1]
@@ -13,6 +14,14 @@ harness.write_text('#define main lexer_main\n#include ' + json.dumps(str(source)
 int main(void) {
     int s,c;
     init_tables(); build_dfa();
+    /* The scanner's explicit switch must agree with every exported root edge. */
+    for(c=0;c<52;c++) {
+        int ch = c < 26 ? 'A' + c : 'a' + c - 26;
+        if(keyword_initial(ch,c) != DELTA[0][c]) {
+            fprintf(stderr,"Keyword dispatch disagrees with DFA for %c\n",ch);
+            return 1;
+        }
+    }
     printf("%d %d\n", nstates, NUM_CLASSES);
     for(s=0;s<nstates;s++) {
         printf("%d|%s|%s|%d|%d|",s,STATE_NAME[s],ACC_TOK[s]==ACC_NO?"NONE":ACC_TOK[s]==ACC_SKIP?"SKIP":TOKEN_NAMES[ACC_TOK[s]],ACC_SUSP[s],COMMIT[s]);
@@ -21,7 +30,7 @@ int main(void) {
     }
 }
 ''')
-subprocess.run(['cc', '-std=c99', str(harness), '-o', str(out/'dump_dfa')], check=True)
+subprocess.run([os.environ.get('CC', 'cc'), '-std=c99', str(harness), '-o', str(out/'dump_dfa')], check=True)
 data = subprocess.check_output([str(out/'dump_dfa')], text=True)
 (out/'dfa-states.txt').write_text(data)
 lines = data.splitlines()

@@ -103,7 +103,7 @@ the same start state and to its original source location.
 
 The earlier language proposal and subsequent lexical specification establish
 the project context~\cite{spec,proposal}. This paper concentrates on the actual
-selected program, \code{lexical\_analyzer/lalgo\_unified.c}~\cite{impl}.
+selected program, \code{lexical\_analyzer/}\allowbreak\code{lalgo\_unified.c}~\cite{impl}.
 The older \code{lalgo\_lexer.c} is retained as a historical implementation and
 is not the implementation evaluated here.
 
@@ -211,9 +211,22 @@ accepts the corresponding reserved token. A folded terminal accepts an
 identifier with the suspicion flag. Digits, underscores, or diverging letters
 lead to a general identifier state, which continues the full name.
 
-The keyword array is construction data. During scanning, keyword recognition
-uses the same transition lookup as every other token family; it performs no
-completed-lexeme string comparison. The generated full transition appendix in
+The keyword array is construction data and remains the only spelling list.
+At the first letter of each word, \code{dfa\_run} calls
+\code{keyword\_initial}, whose explicit C \code{switch (ch)} has named
+uppercase and lowercase cases for the keyword initials.
+In \code{case 'I':}, the trie root selects \code{E:I}; the next
+\code{F} follows \code{DELTA} to \code{E:IF}. At a word boundary,
+\code{IF} emits \code{KW\_IF}. The same I branch also leads to
+\code{INPUT}, \code{INTEGER}, and \code{INVARIANT}.
+\code{case 'i':} selects the folded \code{F:I} path.
+Later characters use the unified transition table, with no completed-lexeme
+string comparison. \code{IF(} yields \code{KW\_IF LPAREN};
+\code{I}, \code{IF1}, and \code{IF\_} are ordinary identifiers,
+while \code{If} and \code{if} carry the suspected-keyword flag.
+The DFA exporter verifies that first-letter dispatch agrees with every
+letter transition from the start state. This C switch does not change the
+language's existing \code{SWITCH/CASE/DEFAULT/BREAK} statements. The generated full transition appendix in
 the companion specification can be recreated using
 \code{lexical\_analyzer/export\_unified\_dfa.py}~\cite{export}.
 
@@ -377,7 +390,7 @@ exhaustive input-space proof is claimed.}
 \begin{tabularx}{\linewidth}{@{}>{\RaggedRight\arraybackslash}p{35mm}Y@{}}
 \toprule Contract area & Checks included in the suite \\\midrule
 Reserved words & All 28 spellings, folded-case diagnostics, partial prefixes,
-and suffixes that turn keywords into identifiers. Switch cases exercise all four keyword tokens, the colon, and the lexical listing categories. \\
+and suffixes that turn keywords into identifiers. The I-branch checks include\newline\code{IF(}, EOF, capitalization, and the actual \code{I -> IF} trace. Switch cases exercise all four keyword tokens, the colon, and the lexical listing categories. \\
 Names and numbers & Identifier alphabet, illegal initial underscore, leading
 zeros, maximum integer, overflow, decimals, dot fallback, and number/name adjacency. \\
 Punctuation & Arithmetic, assignment, relational operators, brackets,
@@ -446,7 +459,7 @@ passing local suite provides a reproducible baseline for subsequent compiler wor
 \renewcommand{\refname}{Project Sources}
 \begin{thebibliography}{9}
 \bibitem{impl} Group 4. \emph{Unified LAlgo lexical analyzer}. Repository source:
-\code{lexical\_analyzer/lalgo\_unified.c}. Snapshot evaluated 30 October 2026.
+\code{lexical\_analyzer/}\allowbreak\code{lalgo\_unified.c}. Snapshot evaluated 30 October 2026.
 \bibitem{spec} Group 4. \emph{LAlgo Language Design Specification}.
 \code{lalgo\_language\_specification.tex}; companion PDF in this repository.
 \bibitem{proposal} Group 4. \emph{Principles of Programming Language Proposal}.

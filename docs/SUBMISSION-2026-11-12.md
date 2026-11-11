@@ -14,6 +14,6 @@ Use the [revised proposal PDF](../LAlgo_Language_Design_Specification.pdf) for t
 
 Design choices made in this revision are `WHILE` as the only grammar loop kind, semicolons on simple statements, braces on control bodies, and comma-separated mixed output and declaration lists. The C lexer retains its existing legacy `FOR` token. The grammar rejects it as a statement.
 
-The switch revision checks 33 lexer cases, 13 syntax CLI cases, 45 rule examples, 90 complete derivations, 45 parse trees, three full programs, 15 grammar rejections, and three loop-classification cases. The CLI checks the full EBNF and reports syntax diagnostics. The planned recovery stage remains part of later implementation.
+The keyword-dispatch revision checks 39 lexer cases, 13 syntax CLI cases, 45 rule examples, 90 complete derivations, 45 parse trees, three full programs, 15 grammar rejections, and three loop-classification cases. The CLI checks the full EBNF and reports syntax diagnostics. The planned recovery stage remains part of later implementation.
 
 Compare any individual instructor markup that was circulated outside the supplied announcement, recordings, and repository against the revised Chapters 1 and 2. Use the representative's Drive folder when its link is shared.

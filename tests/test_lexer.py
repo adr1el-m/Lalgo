@@ -72,6 +72,26 @@ def main():
           inspect=lambda p, r, t: require(
               all(re.search(r'^\d+\s+' + kind + r'\s+Keyword \(Control Flow\)', t, re.M)
                   for kind in ('KW_SWITCH', 'KW_CASE', 'KW_DEFAULT', 'KW_BREAK')), t))
+    for label, spellings in [('lowercase', words.lower()),
+                             ('mixed case', ' '.join(w.title() for w in words.split()))]:
+        check('all keyword initials ' + label, spellings, ['IDENT'] * len(kinds),
+              inspect=lambda p, r, t: require(all(x[5] for x in r[:-1]), r))
+    check('I branch whole words and boundaries',
+          'IF( I IF1 IF_ INPUT INTEGER INVARIANT',
+          ['KW_IF', 'LPAREN'] + ['IDENT'] * 3 +
+          ['KW_INPUT', 'KW_INTEGER', 'RES_INVARIANT'],
+          inspect=lambda p, r, t: require(not any(x[5] for x in r), r))
+    check('I branch capitalization and incomplete prefixes',
+          'If if iF input Integer Invariant i IN INP IFx if1 if_',
+          ['IDENT'] * 12,
+          inspect=lambda p, r, t: require(
+              [x[5] for x in r[:-1]] == [True] * 6 + [False] * 6, r))
+    check('I branch exact EOF boundary', 'IF', ['KW_IF'])
+    check('I branch trace follows shared DFA', 'IF(', ['KW_IF', 'LPAREN'], trace=True,
+          inspect=lambda p, r, t: require(
+              re.search(r"START\s+'I'\s+UPPER\s+q\d+ E:I\s+ACCEPT: IDENT", p.stdout) and
+              re.search(r"E:I\s+'F'\s+UPPER\s+q\d+ E:IF\s+ACCEPT: KW_IF", p.stdout) and
+              re.search(r"E:IF\s+'\('\s+LPAREN\s+\(dead\)\s+STOP", p.stdout), p.stdout))
     check('identifier alphabet', 'a A a1 a_b Z9_', ['IDENT'] * 5)
     check('invalid identifier start', '_name', ['INVALID', 'IDENT'], code=1, errors=1)
     check('integer range and leading zeros', '0 0007 2147483647 2147483648',

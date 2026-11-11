@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
+import os
 import re
 import subprocess
 import tempfile
@@ -157,7 +158,7 @@ def load_rules():
 
 def lex_file(source, *, cwd=None):
     """Read the lexer stream in source order, preserving full lexemes and locations."""
-    lexer = ROOT / "build/lalgo"
+    lexer = ROOT / ("build/lalgo.exe" if os.name == "nt" else "build/lalgo")
     if not lexer.is_file():
         raise OSError("Build the lexer first with make lexer.")
     process = subprocess.run(

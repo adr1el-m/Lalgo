@@ -7,7 +7,8 @@
  *   1. The lexer is ONE deterministic finite automaton with ONE start state
  *      (q0). Keywords, noise words, identifiers, numbers, strings, operators,
  *      delimiters, comments and whitespace ALL branch out of q0.
- *   2. The automaton is simulated ONLY by transition-table lookup:
+ *   2. A C switch dispatches the first letter into keyword-prefix states.
+ *      Subsequent characters use the same unified transition table:
  *          next_state = DELTA[current_state][character_class]
  *      There is no string comparison anywhere (no strcmp/strncmp/memcmp, and
  *      <string.h> is not included). Keywords are not looked up in a list:
@@ -223,7 +224,7 @@ static const Punct PUNCT[] = {
 };
 
 #define MAX_TRIE 160
-static short TR[MAX_TRIE][26];        /* temporary keyword trie (build time)  */
+static short TR[MAX_TRIE][26];        /* shared keyword-prefix edges          */
 static int   TR_TYPE[MAX_TRIE];       /* keyword token at that node, or -1    */
 static char  TR_NAME[MAX_TRIE][12];   /* letters on the path to that node     */
 static int   trie_n = 1;
@@ -250,6 +251,39 @@ static void build_trie(void)
         }
         TR_TYPE[s] = KEYWORDS[w].type;
     }
+}
+
+/* First character of a word: explicit C dispatch into the existing DFA.
+ * KEYWORDS remains the only spelling list; TR and E_STATE/F_STATE are built
+ * from it. The same destinations appear in DELTA[0] and the DFA appendix. */
+static int keyword_initial(int ch, int cls)
+{
+    int node, letter;
+    switch (ch) {
+        case 'I':
+        case 'i':
+            /* I -> E:I (i -> F:I). The next F follows DELTA to E:IF;
+             * N continues toward INPUT, INTEGER, or INVARIANT instead.
+             * Only a whole uppercase IF emits KW_IF (maximal munch). */
+            letter = 'I' - 'A';
+            break;
+        case 'A': case 'a': letter = 'A' - 'A'; break;
+        case 'B': case 'b': letter = 'B' - 'A'; break;
+        case 'C': case 'c': letter = 'C' - 'A'; break;
+        case 'D': case 'd': letter = 'D' - 'A'; break;
+        case 'E': case 'e': letter = 'E' - 'A'; break;
+        case 'F': case 'f': letter = 'F' - 'A'; break;
+        case 'N': case 'n': letter = 'N' - 'A'; break;
+        case 'O': case 'o': letter = 'O' - 'A'; break;
+        case 'R': case 'r': letter = 'R' - 'A'; break;
+        case 'S': case 's': letter = 'S' - 'A'; break;
+        case 'T': case 't': letter = 'T' - 'A'; break;
+        case 'W': case 'w': letter = 'W' - 'A'; break;
+        default: return DELTA[0][cls];
+    }
+    node = TR[0][letter];
+    if (!node) return DELTA[0][cls];
+    return ch >= 'a' && ch <= 'z' ? F_STATE[node] : E_STATE[node];
 }
 
 static void build_dfa(void)
@@ -544,10 +578,12 @@ static Run dfa_run(const Lexer *lx)
     if (show) trace_banner(lx);
     for (;;) {
         cls = class_at(lx, lx->pos + i);
-        nx = DELTA[s][cls];
+        /* Dispatch on the actual first byte before ordinary DFA lookups. */
+        ch = (cls == K_EOF) ? 0 : (unsigned char)lx->src[lx->pos + i];
+        nx = (s == 0 && cls >= K_UPPER0 && cls < K_DIGIT)
+             ? keyword_initial(ch, cls) : DELTA[s][cls];
         if (show) {
-            char cb[12], fb[24], tb[24], note[48];
-            ch = (cls == K_EOF) ? 0 : (unsigned char)lx->src[lx->pos + i];
+            char cb[12], fb[32], tb[32], note[48];
             char_repr(cb, ch, cls == K_EOF);
             snprintf(fb, sizeof fb, "q%d %s", s, STATE_NAME[s]);
             if (nx < 0) {
@@ -669,8 +705,10 @@ static void scan(Lexer *lx)
             long v = 0;
             int k, bad = 0;
             for (k = 0; k < r.len; k++) {
-                v = v * 10 + (lx->src[start + k] - '0');
-                if (v > 2147483647L) { bad = 1; break; }
+                int digit = lx->src[start + k] - '0';
+                /* Check before multiplying: long is only 32 bits on Windows. */
+                if (v > (2147483647L - digit) / 10) { bad = 1; break; }
+                v = v * 10 + digit;
             }
             if (bad) {
                 lex_error(line, col, "Integer literal '%.*s' out of range (max 2147483647)",

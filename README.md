@@ -14,7 +14,7 @@ The repository brings together the original proposal, evolving language specific
 | [Switch example](syntax_proposal/switch_sample.lal) | Demonstrates the required `SWITCH`, `CASE`, `DEFAULT`, and `BREAK` forms. Run `make syntax`. |
 | [Earlier lexer](lexical_analyzer/lalgo_lexer.c) | Retained for historical comparison; the default build and validation target the unified implementation. |
 | [Examples](lexical_analyzer/) | `sample.lal` (binary search), `demo.lal` (additional forms), and `bad.lal` (intentional lexical errors). |
-| [Validation](docs/VALIDATION.md) | 33 lexer checks and 13 syntax CLI checks. Run `make test`. |
+| [Validation](docs/VALIDATION.md) | 39 lexer checks and 13 syntax CLI checks. Run `make test`. |
 
 Chapter 3 defines 45 EBNF rules with one example, both complete derivations, and one parse tree per rule. The syntax checker uses the same EBNF and the C lexer's terminal stream. The switch design requires at least one case, one final default, and `BREAK;` in every arm. `WHILE` remains the sole loop kind. Semantic validation, execution, and syntax panic recovery are later stages. See the [checking comparison](docs/SWITCH-CHECKING.md) and [submission checklist](docs/SUBMISSION-2026-11-12.md).
 
@@ -84,6 +84,33 @@ make syntax SOURCE=syntax_proposal/checking_sample.lal
 Each completed scan prints tokens and diagnostics, and overwrites **`Symbol Table.txt` in the current working directory**. It lists token occurrences, including comments and invalid lexemes, with classifications and positions. It is a lexical listing; declaration/scope resolution is future work. EOF appears in console output and is omitted from the listing file.
 
 Exit codes: `0` = no lexical errors, `1` = lexical errors reported, `2` = usage/input/output failure. The optional `t` argument enables state-transition tracing. Input filenames must end in `.lal` (case-insensitive).
+
+### C first-letter keyword dispatch
+
+`keyword_initial()` in `lexical_analyzer/lalgo_unified.c` contains an explicit
+C `switch (ch)` with named uppercase and lowercase cases for keyword initials.
+`dfa_run()` calls it when reading the first letter of a word. In `case 'I':`,
+the trie root selects `E:I`; the next `F` follows `DELTA` to `E:IF`.
+At a word boundary, `IF` emits `KW_IF`. `INPUT`, `INTEGER`, and `INVARIANT`
+continue through the same I branch. `case 'i':` selects the folded `F:I` path.
+The existing `KEYWORDS` array supplies all spellings and acceptance metadata;
+there is no second keyword list or completed-word comparison. Exporting the
+DFA checks every letter's dispatch destination against the start-state table.
+
+```sh
+./build/lalgo lexical_analyzer/keyword_dispatch.lal t
+```
+
+The checking trace begins `q0 START --I--> q2 E:I --F--> q84 E:IF`.
+The following `(` stops that match, emits `KW_IF`, and is scanned as `LPAREN`.
+`I`, `IF1`, and `IF_` are ordinary identifiers; `If` and `if` are identifiers
+with `suspectedKeyword = TRUE`. This C implementation switch is separate from
+the language's existing `SWITCH`, `CASE`, `DEFAULT`, and `BREAK` statements;
+`make syntax` still checks the switch demo.
+
+On native Windows, the syntax checker uses `build/lalgo.exe`; set `CC=gcc`
+for DFA export if the compiler is named `gcc` rather than `cc`. The integer
+range check tests before multiplication so it also works with 32-bit `long`.
 
 ### Build both papers
 
