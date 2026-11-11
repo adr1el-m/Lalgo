@@ -37,7 +37,7 @@
 
 \hypersetup{
   pdftitle={LAlgo: A Domain-Specific Programming Language Specification},
-  pdfsubject={Language design specification for data structures and algorithms},
+  pdfsubject={Lexical specification and EBNF syntax grammar proposal},
   pdfcreator={LaTeX}
 }
 
@@ -140,10 +140,9 @@
   \vspace{3mm}
   {\LARGE\bfseries\color{pupmaroon}Language Design Specification\par}
   \vspace{5mm}
-  {\large A Domain-Specific Language for Observable Execution,\par
-  Tracing, and Reasoning in Algorithms\par}
+  {\large A Domain-Specific Language for Data Structures and Algorithms\par}
   \vspace{3mm}
-  {\large\itshape Formal Syntax and Operational Lexicon\par}
+  {\large\itshape Lexical Specification and EBNF Syntax Proposal\par}
   \vspace{6mm}
   {\large\bfseries Submitted by: Group 4\par}
   \vspace{3mm}
@@ -163,6 +162,8 @@
   {\large\bfseries Course and Subject Code\par}
   \vspace{2mm}
   {\large Principles of Programming Languages (COSC 303)\par}
+  \vspace{3mm}
+  {\large 12 November 2026\par}
 \end{center}
 \end{titlepage}
 
@@ -180,52 +181,26 @@
 
 \subsection{Overview}
 
-LAlgo is a proposed imperative domain-specific language (DSL) for expressing data structures and algorithms (DSA) in readable pseudocode. This proposal focuses on the lexical analyzer: the character alphabet, token classes, and one unified deterministic finite automaton used to recognize source text. A complete parser and runtime are future work.
+LAlgo is a proposed imperative domain-specific language (DSL) for expressing data structures and algorithms in readable pseudocode. The unified C lexer implements lexical recognition. Chapter~2 documents its token rules, and Chapter~3 proposes an EBNF grammar and a top-down syntax analyzer.
 
-The examples use familiar declarations, operators, indexing, and control-flow words to show the intended token vocabulary. They illustrate how an algorithm such as binary search could be written, but they do not claim that execution tracing or invariant checking is implemented by the present lexical proposal.
+The proposed language includes declarations, input and output, assignment, conditionals, and iteration. It uses one loop kind, \kw{WHILE}, in single and nested forms. A binary-search program illustrates how these constructs work together.
 
 \subsection{Inspiration}
 
-The primary inspiration for LAlgo emerges from the cognitive disconnect students encounter when transitioning between algorithmic pseudocode and practical code implementation. Textbooks routinely present algorithms alongside step-by-step state trace tables and formal loop assertions. However, translating these designs into standard programming environments forces students to manage language-specific boilerplate, unmonitored variable states, and implicit type conversions that mask algorithmic errors.
-
-When a learner encounters an off-by-one error, the sequence of intermediate states can be difficult to reconstruct. LAlgo draws inspiration from educational pseudocode, Pascal-like syntax, and structured tracing tools. This paper establishes the lexical groundwork for that longer-term direction without specifying a tracing runtime.
+Algorithm descriptions in textbooks use familiar steps, conditions, and loop guards. LAlgo keeps that vocabulary close to the source and uses explicit statement and block boundaries so readers can follow the order of operations.
 
 \subsection{Problem Addressed}
 
-Traditional programming language compilers and runtime engines are intentionally opaque: they consume source code, optimize away intermediate variables, and produce final output. Under this execution model:
+Pseudocode conventions vary across textbooks. A reader may have to infer where a statement ends, how a condition groups its operators, or which branch belongs to a conditional. LAlgo addresses these questions with a defined token vocabulary and an explicit grammar. The binary-search example illustrates how array access, comparison, assignment, and iteration fit into one program.
 
-\begin{center}
-\begin{tikzpicture}[node distance=8mm and 5mm,font=\small]
-  \node[draw=pupmaroon,rounded corners,fill=pupcream,inner sep=5pt] (src) {Source Code};
-  \node[draw=pupmaroon,rounded corners,fill=pupcream,inner sep=5pt,right=of src] (comp) {Compilation / Interpretation};
-  \node[draw=pupmaroon,rounded corners,fill=pupcream,inner sep=5pt,right=of comp] (silent) {Silent Execution};
-  \node[draw=pupmaroon,rounded corners,fill=pupcream,inner sep=5pt,right=of silent] (out) {Final Output};
-  \draw[->,thick,pupgold] (src)--(comp);
-  \draw[->,thick,pupgold] (comp)--(silent);
-  \draw[->,thick,pupgold] (silent)--(out);
-\end{tikzpicture}
-\end{center}
-
-This pipeline introduces several core educational problems:
-
-\begin{itemize}
-  \item \textbf{Silent Intermediate States.} Students observe only terminal outputs, leaving internal invariant breakdowns, element swaps, and path traversals invisible.
-  \item \textbf{Unverified Invariants.} Algorithmic correctness proofs rely on inductive loop invariants, yet standard languages provide no native, readable syntactic construct to express whether loop conditions remain valid across iterations.
-  \item \textbf{Hidden State Changes.} Intermediate variable updates and branch decisions can be difficult to follow without manually adding diagnostic output.
-\end{itemize}
-
-The present proposal addresses the lexical foundation of this problem. Parsing, execution-state observation, and any later tracing or verification behavior require separate specifications.
-
-\Needspace{12\baselineskip}
 \subsection{Objectives}
 
-The primary goal of this iteration is to define an unambiguous token vocabulary and deterministic lexical recognition model for algorithmic source text. Specifically, the project aims to:
-
 \begin{enumerate}
-  \item Define an unambiguous lexical structure and formal automata suited for algorithmic problem solving.
-  \item Recognize tokens used by illustrative declarations, I/O, assignments, conditional branches, and loops without defining their full parser or runtime behavior.
-  \item Recognize collection-type words (\kw{ARRAY} and \kw{STRING}) and the associated delimiters.
-  \item Reserve \kw{ALGORITHM}, \kw{RETURN}, \kw{TRACE}, and \kw{INVARIANT} for possible future syntactic extensions, without assigning them executable behavior in this iteration.
+  \item Specify the character alphabet, token categories, and unified lexical automaton.
+  \item Preserve token spellings and source positions for syntax analysis and diagnostics.
+  \item Define the grammar for declarations, input and output, assignments, selection, and a single loop kind with nesting.
+  \item Provide one example per named grammar rule and show its leftmost and rightmost expansion order.
+  \item Specify a top-down parser design with a sequential terminal handoff and recovery after syntax errors.
 \end{enumerate}
 
 \section{Lexical Elements}
@@ -675,7 +650,7 @@ Several simplifications keep the model clear and within the scope of lexical ana
   \item \textbf{Newlines.} CRLF line endings are normalized to a single line feed before lexical scanning; an isolated carriage return is not accepted.
   \item \textbf{Block comments.} Block comments do not nest; the first \codeinline{*/} closes the comment.
   \item \textbf{Quotes inside literals.} Because escape sequences are not defined, a string cannot contain a double quote and a character literal cannot contain a single quote. Backslash is not permitted in either literal; escapes are future work.
-  \item \textbf{Signed numbers.} Negative numbers are formed by a subtraction operator followed by a literal, so the numeric literal itself contains no sign.
+  \item \textbf{Signed numbers.} The lexer emits a minus operator separately from the unsigned literal. Chapter~3 assigns unary minus its role in expressions.
   \item \textbf{Number-identifier boundaries.} A numeric literal immediately followed by an alphabetic character or underscore (for example, \codeinline{5thSample}, \codeinline{2low}, or \codeinline{2\_low}) is a lexical error: \codeinline{Malformed number '2low'}. The scanner consumes the numeric candidate and the entire following run of \codeinline{[A-Za-z0-9\_]} as one bad lexeme and resumes after it. For example, \codeinline{1.5abc} is one malformed number.
 \end{itemize}
 
@@ -692,7 +667,8 @@ Every token is a record \codeinline{(type, lexeme, line, column, precededByNewli
 Identifier & \token{IDENT} \\
 Literals & \token{INTEGER, DECIMAL, STRING, CHAR, TRUE, FALSE} \\
 Type keywords & \token{KW\_INTEGER, KW\_DECIMAL, KW\_CHARACTER,}\newline\token{KW\_BOOLEAN, KW\_ARRAY, KW\_STRING} \\
-Control/I/O keywords & \token{KW\_IF, KW\_ELSE, KW\_WHILE, KW\_FOR, KW\_INPUT, KW\_OUTPUT} \\
+Control/I/O keywords & \token{KW\_IF, KW\_ELSE, KW\_WHILE,}\newline\token{KW\_INPUT, KW\_OUTPUT} \\
+Legacy lexical token & \token{KW\_FOR} (excluded from Chapter~3) \\
 Operator keywords & \token{DIV, AND, OR, NOT} \\
 Arithmetic & \token{PLUS, MINUS, STAR, SLASH, PERCENT, CARET} \\
 Relational / assignment & \token{ASSIGN, EQ, NEQ, LT, GT, LE, GE} \\
@@ -766,17 +742,17 @@ Exponentiation & \codeinline{\textasciicircum} & Right & Raises the base to a po
 \textbf{Distinction between \codeinline{/} and \kw{DIV}:}
 
 \begin{lstlisting}
-INTEGER a = 7
-INTEGER b = 2
-OUTPUT a / b   // Yields Decimal: 3.5
-OUTPUT a DIV b // Yields Integer: 3
-OUTPUT a % b   // Yields Integer remainder: 1
+INTEGER a = 7;
+INTEGER b = 2;
+DECIMAL quotient = a / b;       // 3.5
+INTEGER truncated = a DIV b;    // 3
+INTEGER remainder = a % b;      // 1
 \end{lstlisting}
 
 \textbf{Exponentiation example:}
 
 \begin{lstlisting}
-OUTPUT 2 ^ 3 // Yields 8
+INTEGER power = 2 ^ 3; // 8
 \end{lstlisting}
 
 \subsubsection{Boolean (Logical) Operators}
@@ -819,7 +795,7 @@ Greater than or equal to & \codeinline{>=} & \codeinline{val >= 0} \\
 \Needspace{25\baselineskip}
 \subsection{Keywords and Reserved Words}
 
-Reserved words are recognized by the lexer and cannot be used as identifiers. The current language keywords and the words held for future extensions are distinguished below. All use uppercase canonical spelling. Keywords are recognized only in their uppercase spelling. An identifier whose lowercase form equals the lowercase form of a reserved word (for example, \codeinline{while} or \codeinline{If}) is emitted as \token{IDENT} with \codeinline{suspectedKeyword} set to \kw{TRUE}, so later phases can report ``Did you mean WHILE?''. Such an identifier is not a lexical error and is not reserved. The same diagnostic rule applies to future-reserved and noise words; identifiers such as \codeinline{input}, \codeinline{string}, and \codeinline{array} remain legal.
+Reserved words are recognized by the lexer and cannot be used as identifiers. The current language keywords and the words held for future extensions are distinguished below. All use uppercase canonical spelling. Keywords are recognized only in their uppercase spelling. An identifier whose lowercase form equals the lowercase form of a reserved word (for example, \codeinline{while} or \codeinline{If}) is emitted as \token{IDENT} with \codeinline{suspectedKeyword} set to \kw{TRUE}, so later phases can report ``Did you mean WHILE?''. Such an identifier is not a lexical error and is not reserved. The same diagnostic rule applies to legacy, future-reserved, and noise words. Identifiers such as \codeinline{input}, \codeinline{string}, and \codeinline{array} remain legal.
 
 \begin{center}
 \begin{tabularx}{\linewidth}{L{47mm} Y}
@@ -828,7 +804,8 @@ Reserved words are recognized by the lexer and cannot be used as identifiers. Th
 \midrule
 Primitive types & \kw{INTEGER}, \kw{DECIMAL}, \kw{CHARACTER}, \kw{BOOLEAN} \\
 Collection types & \kw{ARRAY}, \kw{STRING} \\
-Control flow & \kw{IF}, \kw{ELSE}, \kw{WHILE}, \kw{FOR} \\
+Control flow & \kw{IF}, \kw{ELSE}, \kw{WHILE} \\
+Legacy lexical spelling & \kw{FOR} (excluded from Chapter~3) \\
 I/O statements & \kw{INPUT}, \kw{OUTPUT} \\
 Boolean literals & \kw{TRUE}, \kw{FALSE} \\
 Arithmetic operator & \kw{DIV} \\
@@ -838,29 +815,29 @@ Future extensions (reserved only) & \kw{ALGORITHM}, \kw{RETURN}, \kw{TRACE}, \kw
 \end{tabularx}
 \end{center}
 
-The table contains 18 current language keywords and four future-reserved words. The latter are recognized as distinct tokens but are not valid executable constructs in this proposal. The separate noise words \kw{SET} and \kw{THE} are also reserved.
+The lexer recognizes 17 current reserved spellings, one legacy spelling (\kw{FOR}), and four future-reserved words. The grammar uses the current spellings and has no production for the legacy or future-reserved forms. The separate noise words \kw{SET} and \kw{THE} are also reserved.
 
 \subsection{Noise Words}
 
-Noise words are optional lexical tokens designed to mirror natural-language pseudocode. They enhance readability for beginner programmers but carry no operational weight. A future parser may permit them in the illustrative positions below and omit them from its Abstract Syntax Tree (AST); this lexer recognizes them without enforcing statement positions. They remain reserved to prevent identifier ambiguity.
+Noise words are optional lexical tokens designed to mirror natural-language pseudocode. They enhance readability for beginner programmers but carry no operational weight. Chapter~3 permits these words only in the positions shown below. The lexer recognizes them at any token boundary. They remain reserved to prevent identifier ambiguity.
 
 \begin{itemize}
   \item \kw{SET}: optional prefix before an assignment.
 \end{itemize}
 \begin{lstlisting}
-SET index = 0 // Semantically identical to: index = 0
+SET index = 0; // Equivalent to: index = 0;
 \end{lstlisting}
 
 \begin{itemize}
   \item \kw{THE}: optional readability marker in output routines.
 \end{itemize}
 \begin{lstlisting}
-OUTPUT THE result // Semantically identical to: OUTPUT result
+OUTPUT THE result; // Equivalent to: OUTPUT result;
 \end{lstlisting}
 
 \subsection{Comments}\label{sec:comments}
 
-Comments allow programmers to document algorithmic logic, state specifications, and preconditions. The implemented scanner recognizes comments and includes them in its console and Symbol Table output. A future parser may filter these comment entries. Comment bodies may contain any printable ASCII character (32--126), including backslash, and horizontal tab. Block comments may also contain line feeds. Any other character inside a comment is a lexical error. The regular expressions below describe comment boundaries subject to these character restrictions.
+Comments allow programmers to document algorithmic logic, state specifications, and preconditions. The implemented scanner recognizes comments and includes them in its console and Symbol Table output. The proposed parser filters these comment records before reading grammar terminals. Comment bodies may contain any printable ASCII character (32--126), including backslash, and horizontal tab. Block comments may also contain line feeds. Any other character inside a comment is a lexical error. The regular expressions below describe comment boundaries subject to these character restrictions.
 
 \Needspace{15\baselineskip}
 \subsubsection{Single-Line Comments}
@@ -917,14 +894,14 @@ INTEGER       x    =    100;
 
 \subsection{Delimiters and Brackets}
 
-Delimiters define statement boundaries, parameter passing, collection bounds, and hierarchical scoping blocks.
+Delimiters mark statement boundaries, collection bounds, grouping, and blocks in the proposed syntax.
 
 \begin{itemize}
-  \item \textbf{Parentheses \codeinline{( )}:} enclose mathematical expressions, conditional guards, and call-like constructs (future).
+  \item \textbf{Parentheses \codeinline{( )}:} enclose grouped expressions and the guards of conditionals and loops.
   \item \textbf{Square brackets \codeinline{[ ]}:} delimit array literals and specify indexed element access.
-  \item \textbf{Curly braces \codeinline{\{ \}}:} delimit compound statement blocks, loops, and conditional branches; grouping and call-like constructs are future work.
-  \item \textbf{Comma \codeinline{,}:} separates arguments, parameters, and array elements.
-  \item \textbf{Semicolon \codeinline{;}:} is recognized as a separate token. Rules for using it as a statement separator belong to the future parser specification.
+  \item \textbf{Curly braces \codeinline{\{ \}}:} delimit the statement blocks of conditionals and loops.
+  \item \textbf{Comma \codeinline{,}:} separates declaration names and array elements and divides the two operands of mixed output.
+  \item \textbf{Semicolon \codeinline{;}:} ends a declaration, input, output, or assignment statement in Chapter~3.
 \end{itemize}
 
 \subsection{Free-Field Format}
@@ -932,11 +909,11 @@ Delimiters define statement boundaries, parameter passing, collection bounds, an
 LAlgo uses a free-field format. Program source code is not bound to fixed columns, physical margins, or indentation rules.
 
 \begin{itemize}
-  \item \textbf{Block markers.} Opening and closing braces are separate tokens in the examples; their nesting and scope effects belong to a future parser specification.
-  \item \textbf{Statement formatting.} Outside comments and quoted literals, spaces, tabs, and line feeds separate tokens without defining statement boundaries. Whether tokens form one or multiple statements is a parser-level question.
+  \item \textbf{Block markers.} Braces delimit blocks. Chapter~3 defines how blocks and statements can nest.
+  \item \textbf{Statement formatting.} Outside comments and quoted literals, spaces, tabs, and line feeds separate tokens. The punctuation and productions in Chapter~3 determine statement boundaries.
 \end{itemize}
 
-Line feeds are consumed and never emitted as separate tokens. For ordinary tokens and EOF, \codeinline{precededByNewline} records whether a line feed occurred since the preceding ordinary token (or the start of the source), including within comments and recovered invalid text. Comment and INVALID entries are auxiliary: their own flag records a line feed since the preceding visible entry, but emitting them does not clear the pending flag for the next ordinary token. Thus the next ordinary token retains its newline information even when a comment is listed between statements. The future parser may use this metadata; it does not itself prescribe a statement-ending rule.
+Line feeds are consumed and never emitted as separate tokens. For ordinary tokens and EOF, \codeinline{precededByNewline} records whether a line feed occurred since the preceding ordinary token (or the start of the source), including within comments and recovered invalid text. Comment and INVALID entries are auxiliary: their own flag records a line feed since the preceding visible entry, but emitting them does not clear the pending flag for the next ordinary token. Thus the next ordinary token retains its newline information even when a comment is listed between statements. The parser design uses explicit terminators for statement boundaries and retains the metadata for diagnostics.
 
 \textbf{Illustrative free-field source:}
 
@@ -947,7 +924,7 @@ IF (low < high) { OUTPUT low; }
 
 \subsection{Expressions}
 
-The examples below show token sequences for intended arithmetic, relational, and logical expressions. Their complete grammar, typing, and evaluation rules are outside this lexical proposal.
+The examples below show token sequences for intended arithmetic, relational, and logical expressions. Chapter~3 specifies their grammar and grouping. Type checking and evaluation belong to later stages.
 
 \begin{enumerate}
   \item \textbf{Arithmetic expressions} evaluate to numeric types (\kw{INTEGER} or \kw{DECIMAL}).
@@ -986,7 +963,22 @@ Rank & Operator & Description & Associativity \\
 \end{tabularx}
 \end{table}
 
-The table lists intended precedence from highest to lowest. In particular, \codeinline{NOT found == TRUE} groups as \codeinline{NOT (found == TRUE)}. These are requirements for the future parser, not operations performed by the lexer.
+The table lists intended precedence from highest to lowest. In particular, \codeinline{NOT found == TRUE} groups as \codeinline{NOT (found == TRUE)}. Chapter~3 incorporates these grouping rules into the syntax proposal.
+
+\subsubsection*{Operator choices compared with C and Java}
+
+\begin{tabularx}{\linewidth}{@{}L{28mm}YY@{}}
+\toprule
+\textbf{Operation} & \textbf{C and Java} & \textbf{LAlgo design} \\
+\midrule
+Integer operands in division & \codeinline{/} truncates the quotient toward zero when it is representable. & \kw{DIV} requests the truncated integer quotient. \codeinline{/} requests a decimal quotient. \\
+Caret & \codeinline{\textasciicircum} applies bitwise XOR to integer operands. & \codeinline{\textasciicircum} denotes right-associative exponentiation. \\
+Logical spelling & \codeinline{!}, \codeinline{\&\&}, and \codeinline{||}. & \kw{NOT}, \kw{AND}, and \kw{OR} follow pseudocode spelling. \\
+\bottomrule
+\end{tabularx}
+
+{\footnotesize References: \href{https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf}{WG14 N1570}, Sections 6.5.3.3, 6.5.5, and 6.5.11--6.5.14.
+\href{https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html}{Java Language Specification, Chapter 15}, Sections 15.15.6, 15.17.2, and 15.22--15.24.}
 
 \subsection{Primitive Data Types}
 
@@ -997,8 +989,8 @@ LAlgo supports four fundamental primitive types and two built-in abstract data t
 Represents whole numbers: positive, negative, or zero.
 
 \begin{lstlisting}
-INTEGER count = 0
-INTEGER step = -5
+INTEGER count = 0;
+INTEGER step = -5;
 \end{lstlisting}
 
 \subsubsection{Decimal}
@@ -1006,8 +998,8 @@ INTEGER step = -5
 Represents numbers containing fractional values.
 
 \begin{lstlisting}
-DECIMAL ratio = 0.618
-DECIMAL total = -12.50
+DECIMAL ratio = 0.618;
+DECIMAL total = -12.50;
 \end{lstlisting}
 
 \subsubsection{Character}
@@ -1015,8 +1007,8 @@ DECIMAL total = -12.50
 Represents one printable ASCII character or horizontal tab enclosed in single quotation marks, following the character-literal DFA in Section~\ref{sec:character-dfa}.
 
 \begin{lstlisting}
-CHARACTER grade = 'A'
-CHARACTER delimiter = ','
+CHARACTER grade = 'A';
+CHARACTER delimiter = ',';
 \end{lstlisting}
 
 \subsubsection{Boolean}
@@ -1024,135 +1016,42 @@ CHARACTER delimiter = ','
 Represents binary truth values defined by the literals \kw{TRUE} and \kw{FALSE}.
 
 \begin{lstlisting}
-BOOLEAN isFound = FALSE
-BOOLEAN hasTerminated = TRUE
+BOOLEAN isFound = FALSE;
+BOOLEAN hasTerminated = TRUE;
 \end{lstlisting}
 
-\subsubsection{Abstract Data Types (Optional / Supported)}
+\subsubsection{Collection Types}
 
 To support data-structure modeling, LAlgo provides two native collection types:
 
 \begin{itemize}
   \item \textbf{String.} An immutable ordered sequence of characters enclosed in double quotation marks.
 \begin{lstlisting}
-STRING algorithmName = "Binary Search"
+STRING algorithmName = "Binary Search";
 \end{lstlisting}
   \item \textbf{Array.} A contiguous, zero-indexed collection of homogeneous elements.
 \begin{lstlisting}
-ARRAY numbers = [2, 4, 6, 8, 10]
-INTEGER firstElement = numbers[0]
+ARRAY numbers = [2, 4, 6, 8, 10];
+INTEGER firstElement = numbers[0];
 \end{lstlisting}
 \end{itemize}
 
-\subsection{Statements}
 
-The following snippets illustrate token sequences for proposed declarations and procedural statements. They do not define a complete statement grammar or runtime semantics. The four future-reserved words are not used as executable statements here.
+\subsection{From Lexical Tokens to Statements}
 
-\subsubsection{Declarative Statement (Optional)}
+The lexer recognizes the words, operators, and delimiters that Chapter~3 assembles into statements. The following binary-search illustration uses the proposed syntax, including semicolons after simple statements and brace-delimited control blocks. It uses mixed output to show the matching index.
 
-Declarative statements use a type keyword followed by an identifier, optionally with an initializing expression. Default values for uninitialized variables are not specified by this lexical proposal.
+\lstinputlisting{syntax_proposal/binary_search.lal}
 
-\begin{lstlisting}
-INTEGER minIndex
-DECIMAL threshold = 0.05
-\end{lstlisting}
-
-\subsubsection{Input Statement}
-
-The \kw{INPUT} statement is followed by a target identifier. Input conversion and runtime behavior are outside the scope of this lexical proposal.
-
-\begin{lstlisting}
-INTEGER target
-INPUT target
-\end{lstlisting}
-
-\subsubsection{Output Statement}
-
-The illustrated \kw{OUTPUT} form is followed by an expression. Output formatting and runtime delivery are not defined by the lexer.
-
-\begin{lstlisting}
-OUTPUT "Search completed at index:"
-OUTPUT targetIndex
-\end{lstlisting}
-
-\subsubsection{Assignment Statement}
-
-The assignment symbol \codeinline{=} is recognized between a target identifier or indexed value and an expression. Assignment evaluation is outside the lexical model.
-
-\begin{lstlisting}
-low = mid + 1
-numbers[0] = 99
-\end{lstlisting}
-
-\Needspace{14\baselineskip}
-\subsubsection{Conditional Statement}
-
-Conditional statements provide two-way and multi-way branch selection through \kw{IF}, optional \kw{ELSE IF}, and \kw{ELSE} blocks.
-
-\begin{lstlisting}
-IF (numbers[mid] == target) {
-    OUTPUT "Target Found"
-    found = TRUE
-}
-ELSE IF (numbers[mid] < target) {
-    low = mid + 1
-}
-ELSE {
-    high = mid - 1
-}
-\end{lstlisting}
-
-\Needspace{35\baselineskip}
-\subsubsection{Loop (Iterative) Statements}
-
-The examples use \kw{WHILE} and \kw{FOR} tokens to illustrate indeterminate and determinate iteration forms.
-
-\textbf{WHILE loop (illustrative binary search).} The \kw{WHILE} form below shows a boundary update in both comparison directions. The \kw{INVARIANT} token is reserved for future work and is intentionally absent from this example.
-
-\begin{lstlisting}
-ARRAY numbers = [2, 4, 6, 8, 10]
-INTEGER target = 8
-INTEGER low = 0
-INTEGER high = 4
-INTEGER mid = 0
-BOOLEAN found = FALSE
-WHILE (low <= high AND found == FALSE) {
-    mid = low + (high - low) DIV 2
-    // Update search boundaries according to the comparison
-    IF (numbers[mid] == target) {
-        found = TRUE
-        OUTPUT mid
-    }
-    ELSE IF (numbers[mid] < target) {
-        low = mid + 1
-    }
-    ELSE {
-        high = mid - 1
-    }
-}
-\end{lstlisting}
-
-\Needspace{10\baselineskip}
-\textbf{FOR loop.} The \kw{FOR} construct packages counter initialization, loop-condition checking, and step updates into a single header.
-
-\begin{lstlisting}
-FOR (INTEGER i = 0; i < 10; i = i + 1) {
-    OUTPUT numbers[i]
-}
-\end{lstlisting}
-
-\subsubsection{Future Reserved Extensions}
-
-\kw{ALGORITHM}, \kw{RETURN}, \kw{TRACE}, and \kw{INVARIANT} are reserved lexemes only. This proposal does not define their parser productions, value rules, tracing schedule, invariant-failure behavior, or other runtime effects. They are intentionally omitted from the illustrative snippets above.
-
+\input{syntax_proposal/chapter.tex}
 
 \clearpage
 \appendix
 \section{Worked Binary-Search Token Stream}
 
-This is the complete lexical output for the 20-line \kw{WHILE} binary-search example in Section~2.13.6, counting \codeinline{ARRAY numbers} as line 1. Each indentation level uses four spaces. The closing brace on line 20 is followed by one line feed; EOF is therefore at line 21, column 1. The comment on line 9 is included as a LINE\_COMMENT entry; its displayed text is shortened here to match the console-width limit. Positions, source lexemes, and newline flags are retained; every \codeinline{suspectedKeyword} flag is \kw{FALSE}.
+This is the complete lexical output for the 20-line lexer regression fixture \codeinline{sample.lal}, counting \codeinline{ARRAY numbers} as line 1. Each indentation level uses four spaces. The closing brace on line 20 is followed by one line feed; EOF is therefore at line 21, column 1. The comment on line 9 is included as a LINE\_COMMENT entry; its displayed text is shortened here to match the console-width limit. Positions, source lexemes, and newline flags are retained; every \codeinline{suspectedKeyword} flag is \kw{FALSE}.
 
-The table is a worked lexical reference, not evidence of parser or runtime execution. Read rows from top to bottom. The last column is \codeinline{precededByNewline}; an empty lexeme belongs only to EOF.
+The fixture predates the syntax proposal and omits semicolons on simple statements. Chapter~2 shows the updated binary-search source. Read the lexical rows from top to bottom. The last column is \codeinline{precededByNewline}; an empty lexeme belongs only to EOF.
 
 \begingroup
 \small

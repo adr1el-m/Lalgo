@@ -1,0 +1,47 @@
+Program = { Statement }, EOF ;
+Statement = InputStmt | OutputStmt | Assignment | Declaration | Conditional | Loop ;
+Block = "{", { Statement }, "}" ;
+
+InputStmt = "INPUT", IDENT, ";" ;
+OutputStmt = OutputText | OutputValue | OutputMixed ;
+OutputText = "OUTPUT", [ "THE" ], STR_LIT, ";" ;
+OutputValue = "OUTPUT", [ "THE" ], Reference, ";" ;
+OutputMixed = "OUTPUT", [ "THE" ], STR_LIT, ",", Reference, ";" ;
+
+Assignment = AssignVariable | AssignConstant | AssignExpression ;
+AssignVariable = [ "SET" ], Reference, "=", Reference, ";" ;
+AssignConstant = [ "SET" ], Reference, "=", Literal, ";" ;
+AssignExpression = [ "SET" ], Reference, "=", (Expression - (Reference | Literal)), ";" ;
+
+Declaration = DeclareOne | DeclareList | DeclareInit ;
+DeclareOne = Type, IDENT, ";" ;
+DeclareList = Type, IDENT, ",", IDENT, { ",", IDENT }, ";" ;
+DeclareInit = Type, IDENT, "=", Expression, ";" ;
+Type = "INTEGER" | "DECIMAL" | "CHARACTER" | "BOOLEAN" | "ARRAY" | "STRING" ;
+
+Conditional = IfOnly | IfElse | IfChain ;
+IfHead = "IF", "(", Expression, ")", Block ;
+IfOnly = IfHead ;
+IfElse = IfHead, "ELSE", Block ;
+IfChain = IfHead, ElseIf, { ElseIf }, "ELSE", Block ;
+ElseIf = "ELSE", IfHead ;
+
+Loop = PlainWhile | NestedWhile ;
+WhileHead = "WHILE", "(", Expression, ")" ;
+PlainWhile = WhileHead, (Block - LoopBlock) ;
+NestedWhile = WhileHead, LoopBlock ;
+LoopBlock = Block - ? span contains no WHILE keyword token ? ;
+
+Expression = Conjunction, { "OR", Conjunction } ;
+Conjunction = Negation, { "AND", Negation } ;
+Negation = "NOT", Negation | Equality ;
+Equality = Comparison, { ( "==" | "!=" ), Comparison } ;
+Comparison = Sum, { ( "<" | "<=" | ">" | ">=" ), Sum } ;
+Sum = Product, { ( "+" | "-" ), Product } ;
+Product = Unary, { ( "*" | "/" | "%" | "DIV" ), Unary } ;
+Unary = "-", Unary | Power ;
+Power = Primary, [ "^", Unary ] ;
+Primary = Literal | Reference | "(", Expression, ")" | ArrayLiteral ;
+Reference = IDENT, [ "[", Expression, "]" ] ;
+Literal = INT_LIT | DEC_LIT | CHAR_LIT | STR_LIT | "TRUE" | "FALSE" ;
+ArrayLiteral = "[", [ Expression, { ",", Expression } ], "]" ;

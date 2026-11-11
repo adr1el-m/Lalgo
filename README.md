@@ -9,17 +9,17 @@ The repository brings together the original proposal, evolving language specific
 | Deliverable | Current state |
 | --- | --- |
 | [Lexer paper](LAlgo_Lexer_Paper.pdf) | Design, implementation, worked token stream, recovery rules, local validation, and limitations; [editable LaTeX](lalgo_lexer_paper.tex). |
-| [Language specification](LAlgo_Language_Design_Specification.pdf) | Lexical rules, examples, diagrams, and a complete generated DFA transition appendix; [editable LaTeX](lalgo_language_specification.tex). |
+| [12 November proposal](LAlgo_Language_Design_Specification.pdf) | Revised Chapters 1 and 2, Chapter 3 EBNF, one example and two parse-tree views per rule, and the lexer appendices. [LaTeX source](lalgo_language_specification.tex). |
 | [Unified lexer](lexical_analyzer/lalgo_unified.c) | Selected implementation: one start state, 254 explicit states, 83 input classes, integrated keyword paths, trace mode, and token listing. |
 | [Earlier lexer](lexical_analyzer/lalgo_lexer.c) | Retained for historical comparison; the default build and validation target the unified implementation. |
 | [Examples](lexical_analyzer/) | `sample.lal` (binary search), `demo.lal` (additional forms), and `bad.lal` (intentional lexical errors). |
 | [Validation](docs/VALIDATION.md) | 31 local black-box cases; reproducible with `make test`. |
 
-The project currently covers **lexical analysis**. Parsing, semantic analysis, statement-boundary rules, and runtime execution remain future work. Reserved words and illustrative programs describe language forms; they do not establish an executable compiler or interpreter.
+The C implementation covers **lexical analysis**. Chapter 3 defines the proposed grammar, statement boundaries, and top-down parser design. Its document generator verifies the examples using the actual C lexer and a separate grammar recognizer. The integrated parser, semantic analyzer, and runtime remain future work. The [submission checklist](docs/SUBMISSION-2026-11-12.md) records the announcement requirements and the local verification.
 
 ## Team guide
 
-Start with the [guide on the papers site](https://papers.adrielmagalona.com/paper/lalgo-team-requirements-guide/read) or the [six-page PDF](LAlgo_Team_Requirements_Guide.pdf) for the 5 November meeting. It keeps the papers' maroon-and-cream colors in a simple team-note layout, with green **Ready** labels for existing portions, and red **Focus** labels for missing work or decisions. It includes deadlines, scope limits, lexical/syntax coverage, Ma'am's syntax and semantic checking tables, and the team's next steps, with short timestamped quotes instead of full transcripts. [Editable LaTeX](lalgo_team_guide.tex).
+For the 12 November submission, use the current proposal above. For the 5 November discussion, start with the [guide on the papers site](https://papers.adrielmagalona.com/paper/lalgo-team-requirements-guide/read) or the [six-page PDF](LAlgo_Team_Requirements_Guide.pdf). It keeps the papers' maroon-and-cream colors in a simple team-note layout, with green **Ready** labels for existing portions, and red **Focus** labels for missing work or decisions. It includes deadlines, scope limits, lexical/syntax coverage, Ma'am's syntax and semantic checking tables, and the team's next steps, with short timestamped quotes instead of full transcripts. [Editable LaTeX](lalgo_team_guide.tex).
 
 Rebuild with `make guide` or `./publish.sh --meeting-guide-only --build-only`. The guide's optional website-publishing route is `./publish.sh --meeting-guide-only` (use `--no-push` for a local website draft).
 
@@ -89,7 +89,7 @@ Install a LaTeX distribution with `latexmk`, `pdflatex`, and the packages used i
 ./publish.sh --build-only
 ```
 
-This runs validation, regenerates the specification's full DFA appendix, and builds both PDFs. Intermediates stay under `build/`. Generated validation details are written to `build/tests/results.json` and tied to the C source by SHA-256.
+This runs the lexer tests, checks the Chapter 3 examples, generates their two tree views and the DFA appendix, and builds both PDFs. Intermediates stay under `build/`. Lexer validation details are written to `build/tests/results.json` and tied to the C source by SHA-256.
 
 The optional website-publishing path in `publish.sh` uses the author's adjacent `../papers-site` workspace. A standalone GitHub clone supports `--build-only`; website publication requires that separate project. This repository baseline does not publish the new paper to the website.
 
@@ -116,13 +116,15 @@ Lalgo/
 │   ├── demo.lal
 │   └── bad.lal
 ├── tests/test_lexer.py
+├── syntax_proposal/             # EBNF, examples, tree generator, and Chapter 3
 ├── docs/VALIDATION.md
+├── docs/SUBMISSION-2026-11-12.md
 └── build/                       # generated locally; ignored by Git
 ```
 
 ## Next milestones
 
-- Define a grammar and parser contract, including statement boundaries and noise-word handling.
+- Implement the proposed recursive-descent parser and connect its terminal cursor to the C lexer.
 - Add semantic rules, scope/type checking, and expression evaluation.
 - Specify runtime behavior for algorithm execution and the future-reserved vocabulary.
 - Expand validation beyond the current local contract suite.

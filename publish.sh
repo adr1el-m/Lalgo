@@ -49,6 +49,7 @@ if $MEETING_GUIDE_ONLY; then
 fi
 make test
 python3 lexical_analyzer/export_unified_dfa.py
+python3 syntax_proposal/build_examples.py
 latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build lalgo_language_specification.tex
 cp build/lalgo_language_specification.pdf LAlgo_Language_Design_Specification.pdf
 latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build lalgo_lexer_paper.tex
@@ -65,11 +66,11 @@ ARGS=(
   --kind paper
   --slug lalgo-language-design-specification
   --title "LAlgo: A Domain-Specific Programming Language Specification"
-  --subtitle "Formal Syntax and Operational Lexicon"
+  --subtitle "Lexical Specification and EBNF Syntax Proposal"
   --author "Buenaventura, Harvey L.; De Mesa, Joshua C.; Dela Rosa, Mico Von Adriel A.; Magalona, Adriel M.; Morales, Timothy Gabriel; Nevado, Sean Andrew M.; Salvacion, Dean James G."
   --subject "Programming Languages"
   --tags "LAlgo,Programming Languages,Finite Automata,Lexical Analysis,Algorithms"
-  --abstract "A lexical specification for LAlgo with one unified deterministic finite automaton, a complete 254-state transition appendix, token and error reporting, and Symbol Table output; parser and runtime extensions remain future work."
+  --abstract "LAlgo lexical specification and EBNF syntax proposal with a unified lexer, numbered rule examples, leftmost and rightmost parse trees, and a top-down parser design."
   --source LAlgo_Language_Design_Specification.pdf
   --yes
 )

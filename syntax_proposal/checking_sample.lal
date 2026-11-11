@@ -1,0 +1,25 @@
+INTEGER age;
+INTEGER first, second, third;
+INTEGER total = 0;
+BOOLEAN repeat = FALSE;
+
+INPUT age;
+OUTPUT "Ready";
+OUTPUT age;
+OUTPUT "Age: ", age;
+first = age;
+second = 1;
+third = first + second * 2;
+
+IF (age > 0) { OUTPUT age; }
+IF (age > 18) { OUTPUT "Adult"; } ELSE { OUTPUT "Minor"; }
+IF (age < 13) { OUTPUT "Child"; }
+ELSE IF (age < 18) { OUTPUT "Teen"; }
+ELSE IF (age < 65) { OUTPUT "Adult"; }
+ELSE { OUTPUT "Senior"; }
+
+WHILE (total < 2) { total = total + 1; }
+WHILE (total < 4) {
+    WHILE (repeat) { repeat = FALSE; }
+    total = total + 1;
+}

@@ -1,0 +1,78 @@
+\clearpage
+\section{Syntax Grammar Rules Proposal (EBNF)}
+\label{sec:syntax-proposal}
+
+This chapter defines the LAlgo syntax proposed for 12 November 2026. It covers declarations, input, output, assignment, selection, and iteration. The language uses \kw{WHILE} for both a single loop and nested loops. The current C lexer supplies the token stream for the proposed syntax analyzer.
+
+\subsection{Grammar contract}
+
+\begin{itemize}
+  \item \textbf{Start symbol.} \codeinline{Program} matches a sequence of statements followed by \codeinline{EOF}. A \codeinline{Block} is a brace-delimited sequence of statements and may be empty.
+  \item \textbf{Terminals.} Quoted words and punctuation match their exact token spellings. Keywords use uppercase. The unquoted terminals below match lexer token categories.
+  \item \textbf{Nonterminals.} Every name on the left of \codeinline{=} in the numbered EBNF is a nonterminal. Each numbered production has one designated example in Section~\ref{sec:rule-examples}.
+  \item \textbf{Statement boundaries.} Declarations, input, output, and assignments end with a semicolon. A conditional ends after the last block in its complete chain. A loop ends at its matching closing brace. A line break is whitespace, including between \kw{ELSE} and \kw{IF}.
+\end{itemize}
+
+\begin{tabularx}{\linewidth}{@{}L{39mm}Y@{}}
+\toprule
+\textbf{Grammar terminal} & \textbf{Lexical token type} \\
+\midrule
+\codeinline{IDENT} & \token{IDENT}, preserving the identifier spelling. \\
+\codeinline{INT\_LIT}, \codeinline{DEC\_LIT} & \token{INTEGER}, \token{DECIMAL}. \\
+\codeinline{CHAR\_LIT}, \codeinline{STR\_LIT} & \token{CHAR}, \token{STRING}, including their source quotes. \\
+\codeinline{EOF} & \token{EOF}, the end-of-input marker. \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Reading the EBNF}
+
+A comma joins symbols in order. A vertical bar separates alternatives. Parentheses group symbols, square brackets make a group optional, and braces repeat a group zero or more times. The final semicolon ends a production definition. Quoted punctuation is part of LAlgo source.
+
+The exception \codeinline{A - B} removes any \emph{entire token span} in \codeinline{A} that also matches \codeinline{B}. This gives the three assignment forms distinct right-hand sides. A bare reference or literal takes its own form. A grouped or operator-containing expression, or an array literal, takes the expression form. In \codeinline{LoopBlock}, the special sequence between question marks denotes spans containing no \token{KW\_WHILE}. Subtracting those spans leaves blocks containing a loop at any depth, including inside an \kw{IF}. The quoted word \codeinline{"WHILE"} inside a string has token type \token{STRING}, so it does not affect this classification.
+
+\subsection{Productions}
+
+\lstinputlisting[language={},basicstyle=\small\ttfamily,breakatwhitespace=true]{build/syntax-proposal/numbered.ebnf}
+
+The expression tiers follow the precedence table in Chapter~2. Repeated binary operators at a tier associate from the left. The recursive right operand of \codeinline{Power} makes exponentiation right-associative. Thus \codeinline{2 \textasciicircum{} 3 \textasciicircum{} 2} groups as \codeinline{2 \textasciicircum{} (3 \textasciicircum{} 2)}. Unary minus on the left applies after exponentiation. \kw{NOT} binds after comparison and equality and before \kw{AND} and \kw{OR}.
+
+\subsection{Statement coverage}
+
+\begin{tabularx}{\linewidth}{@{}L{29mm}L{47mm}Y@{}}
+\toprule
+\textbf{Family} & \textbf{Designated rule examples} & \textbf{Forms} \\
+\midrule
+Input & R04 & One input construct with an identifier target. \\
+Output & R06--R08 & Text only, reference value only, and text followed by a comma and a reference. \\
+Assignment & R10--R12 & Variable, literal constant, and expression as the assigned value. \\
+Declaration & R14--R16 & One name, a comma-separated list of names of one type, and one initialized name. \\
+Condition & R20--R22 & Single \kw{IF}, \kw{IF}--\kw{ELSE}, and \kw{IF} with one or more \kw{ELSE IF} clauses and a final \kw{ELSE}. \\
+Iteration & R26--R27 & One \kw{WHILE} kind with a loop-free body or a body containing another \kw{WHILE}. \\
+\bottomrule
+\end{tabularx}
+
+Declaration with initialization starts with a type keyword. Plain assignment starts with a reference or optional \kw{SET}. The optional \kw{THE} appears immediately after \kw{OUTPUT}. These two noise words have no effect on the statement's meaning.
+
+\subsection{Parsing approach and token handoff}
+
+The proposed analyzer uses \textbf{top-down recursive descent}. Its token cursor reads one terminal at a time from the lexer's in-memory token sequence. It retains line and column information, skips comment records, and reports lexical diagnostics separately. The lexer also writes \codeinline{Symbol Table.txt} for lexical checking. The cursor retains \token{EOF} from memory.
+
+The cursor collects terminals one at a time through the statement's terminator. It tracks delimiters so a semicolon inside a control block stays with that block. At the closing brace of an \kw{IF} or \kw{ELSE IF} body, one terminal of lookahead determines whether \kw{ELSE} extends the statement. Once the statement boundary is reached, recursive descent validates the collected terminals and the statements within any nested blocks.
+
+The first terminal selects the statement family. A declaration's separator distinguishes a single name, list, or initializer. After \kw{OUTPUT}, a string followed by a comma selects the mixed form. An assignment is classified from the complete shape of its right-hand expression. A conditional chain with an \kw{ELSE IF} requires a final \kw{ELSE}. For a \kw{WHILE}, the parsed body determines which loop rule applies. The analyzer shares common prefixes and records the corresponding named production in the tree.
+
+\subsection{Syntax errors and panic recovery}
+
+On a syntax error, report the unexpected token and the expected token or construct, with its line and column. For example, the proposed format is \codeinline{Syntax error on line 3, column 1: expected ';' after assignment.}
+
+Panic recovery discards the damaged part of the statement. The recovery scan tracks grouping and block delimiters and looks for a semicolon, the current block's closing brace, or EOF at a suitable nesting level. It may also resume at an unambiguous next statement starter at the same level, such as a type or I/O keyword after a missing semicolon. The parser consumes a synchronizing semicolon but leaves a closing brace for the enclosing block. Each recovery step consumes input or returns control to an enclosing rule. The analyzer continues checking later statements and reports failure for the complete program if any error was recorded.
+
+Semantic checking is scheduled separately. It will use the syntax tree to check types and declarations and maintain semantic symbol-table entries. The grammar examples demonstrate syntactic form, so an identifier in a fragment can stand for an already-declared name.
+
+\Needspace{15\baselineskip}
+\subsection{One example and two parse trees per rule}
+\label{sec:rule-examples}
+
+Each numbered rule below has one source example, rooted at the rule it illustrates. Rule fragments such as an expression or a block are shown at their own root. The two bracketed trees have the same terminal leaves in source order. In each tree, \codeinline{Name\#n[...]} means the named nonterminal expands at step \codeinline{n} to the children in brackets. Read step numbers in increasing order. The leftmost tree expands the leftmost remaining nonterminal at each step, and the rightmost tree expands the rightmost. An absent optional or empty repetition contributes no child. An entry such as \codeinline{IDENT:age} shows the terminal category and its lexeme.
+
+\input{build/syntax-proposal/examples.tex}
