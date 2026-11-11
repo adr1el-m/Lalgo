@@ -9,7 +9,7 @@ The repository brings together the original proposal, evolving language specific
 | Deliverable | Current state |
 | --- | --- |
 | [Lexer paper](LAlgo_Lexer_Paper.pdf) | Design, implementation, worked token stream, recovery rules, local validation, and limitations; [editable LaTeX](lalgo_lexer_paper.tex). |
-| [12 November proposal](LAlgo_Language_Design_Specification.pdf) | Revised Chapters 1 and 2, Chapter 3 EBNF, one example and two parse-tree views per rule, and the lexer appendices. [LaTeX source](lalgo_language_specification.tex). |
+| [12 November proposal](LAlgo_Language_Design_Specification.pdf) | Revised Chapters 1 and 2, Chapter 3 EBNF, one example, two derivations, and one parse tree per rule, and the lexer appendices. [LaTeX source](lalgo_language_specification.tex). |
 | [Unified lexer](lexical_analyzer/lalgo_unified.c) | Selected implementation: one start state, 254 explicit states, 83 input classes, integrated keyword paths, trace mode, and token listing. |
 | [Earlier lexer](lexical_analyzer/lalgo_lexer.c) | Retained for historical comparison; the default build and validation target the unified implementation. |
 | [Examples](lexical_analyzer/) | `sample.lal` (binary search), `demo.lal` (additional forms), and `bad.lal` (intentional lexical errors). |
@@ -89,7 +89,7 @@ Install a LaTeX distribution with `latexmk`, `pdflatex`, and the packages used i
 ./publish.sh --build-only
 ```
 
-This runs the lexer tests, checks the Chapter 3 examples, generates their two tree views and the DFA appendix, and builds both PDFs. Intermediates stay under `build/`. Lexer validation details are written to `build/tests/results.json` and tied to the C source by SHA-256.
+This runs the lexer tests, checks the Chapter 3 examples, generates their derivations, parse trees, and the DFA appendix, and builds both PDFs. Intermediates stay under `build/`. Lexer validation details are written to `build/tests/results.json` and tied to the C source by SHA-256.
 
 The optional website-publishing path in `publish.sh` uses the author's adjacent `../papers-site` workspace. A standalone GitHub clone supports `--build-only`; website publication requires that separate project. This repository baseline does not publish the new paper to the website.
 

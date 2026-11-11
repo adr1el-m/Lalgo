@@ -1,4 +1,4 @@
-"""Generate Chapter 3 and verify its example trees against the unified lexer."""
+"""Generate Chapter 3 and verify its derivations against the unified lexer."""
 
 from dataclasses import dataclass
 from functools import cache
@@ -148,49 +148,43 @@ def recognize(rules, tokens, start):
     return [children[0] for end, children in rule(start, 0) if end == len(tokens)]
 
 
-def numbered_tree(root, rightmost):
-    """Replay leftmost or rightmost expansions, then label the tree with the order."""
-    frontier = [((), root)]
-    numbers = {}
-    while any(isinstance(node, Node) for _, node in frontier):
-        expandable = [i for i, (_, node) in enumerate(frontier) if isinstance(node, Node)]
+def derivation(root, rightmost):
+    """Write every sentential form, expanding one nonterminal at each step."""
+    frontier = [root]
+    lines = [root.name]
+    while True:
+        expandable = [i for i, node in enumerate(frontier) if isinstance(node, Node)]
+        if not expandable:
+            return "\n".join(lines), frontier
         index = expandable[-1] if rightmost else expandable[0]
-        path, node = frontier[index]
-        numbers[path] = len(numbers) + 1
-        frontier[index:index + 1] = [
-            (path + (i,), child) for i, child in enumerate(node.children)
-        ]
-
-    def render(node, path=()):
-        if not isinstance(node, Node):
-            yield node
-            return
-        yield f"{node.name}#{numbers[path]}["
-        for i, child in enumerate(node.children):
-            yield from render(child, path + (i,))
-        yield "]"
-
-    return format_tree(render(root)), [leaf for _, leaf in frontier]
+        node = frontier[index]
+        frontier[index:index + 1] = node.children
+        symbols = [item.name if isinstance(item, Node) else item for item in frontier]
+        lines.append(wrap_symbols(symbols or ["epsilon"], prefix="=> "))
 
 
-def format_tree(tokens, width=52):
-    """Wrap between complete labels and preserve the bracket hierarchy."""
-    parts = []
-    for token in tokens:
-        if token == "]" and parts and parts[-1].endswith("]"):
-            parts[-1] += token
-        else:
-            parts.append(token)
+def tree_symbols(node):
+    """Yield the symbols of a single bracketed parse tree."""
+    if not isinstance(node, Node):
+        yield node
+        return
+    yield f"{node.name}["
+    for child in node.children:
+        yield from tree_symbols(child)
+    yield "]"
+
+
+def wrap_symbols(symbols, prefix="", width=100):
+    """Wrap only between symbols, keeping names and quoted lexemes intact."""
     lines = []
-    line = ""
-    for part in parts:
-        if not line:
-            line = part
-        elif len(line) + 1 + len(part) <= width:
-            line += " " + part
+    line = prefix
+    for symbol in symbols:
+        separator = "" if not line.strip() or line.endswith(" ") else " "
+        if len(line) + len(separator) + len(symbol) <= width:
+            line += separator + symbol
         else:
             lines.append(line)
-            line = "  " + part
+            line = "   " + symbol
     if line:
         lines.append(line)
     return "\n".join(lines)
@@ -221,26 +215,29 @@ def main():
         matches = recognize(rules, lex(source, with_eof=name == "Program"), name)
         if len(matches) != 1:
             raise ValueError(f"{name}: expected one complete tree for {source!r}, got {len(matches)}")
-        left, left_leaves = numbered_tree(matches[0], False)
-        right, right_leaves = numbered_tree(matches[0], True)
+        root = matches[0]
+        left, left_leaves = derivation(root, False)
+        right, right_leaves = derivation(root, True)
         if left_leaves != right_leaves:
-            raise ValueError(f"{name}: the two tree views have different yields")
+            raise ValueError(f"{name}: the derivations have different terminal yields")
         heading = f"\\textbf{{R{index:02d} \\quad \\texttt{{{name}}}}}\\par\n"
         sample = listing(source, "aboveskip=3pt,belowskip=4pt")
-        trees = []
-        for label, view in [("Leftmost tree", left), ("Rightmost tree", right)]:
-            trees.append(
-                "\\begin{minipage}[t]{.485\\linewidth}\n"
+        views = []
+        for label, view in [
+            ("Leftmost derivation", left),
+            ("Rightmost derivation", right),
+            ("Parse tree", wrap_symbols(tree_symbols(root))),
+        ]:
+            views.append(
+                "\\Needspace{4\\baselineskip}\n"
                 f"{{\\small\\bfseries\\color{{pupmaroon}} {label}}}\\par\n"
                 + listing(view, "language={},basicstyle=\\scriptsize\\ttfamily,framesep=3pt,"
-                          "breaklines=false,"
-                          "xleftmargin=0pt,xrightmargin=0pt,aboveskip=2pt,belowskip=0pt")
-                + "\\end{minipage}\n"
+                          "breaklines=false,frame=none,"
+                          "xleftmargin=0pt,xrightmargin=0pt,aboveskip=2pt,belowskip=4pt")
             )
         report.append(
-            "\\par\\noindent\\begin{minipage}{\\linewidth}\n"
-            + heading + sample + "\\noindent\n" + "\\hfill\n".join(trees)
-            + "\\end{minipage}\\par\\medskip\n"
+            "\\par\\medskip\\Needspace{9\\baselineskip}\n"
+            + heading + sample + "\n".join(views)
         )
 
     for path in [HERE / "binary_search.lal", HERE / "checking_sample.lal"]:
@@ -276,7 +273,8 @@ def main():
         for i, line in _number_lines(ebnf)
     )
     (output / "numbered.ebnf").write_text(numbered_rules + "\n")
-    print(f"Verified {len(rules)} designated examples, {2 * len(rules)} numbered trees, "
+    print(f"Verified {len(rules)} designated examples, {len(rules)} parse trees, "
+          f"{2 * len(rules)} complete derivations, "
           "2 complete programs, 7 rejection cases, and 2 loop classification checks.")
 
 

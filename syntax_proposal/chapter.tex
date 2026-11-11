@@ -70,9 +70,11 @@ Panic recovery discards the damaged part of the statement. The recovery scan tra
 Semantic checking is scheduled separately. It will use the syntax tree to check types and declarations and maintain semantic symbol-table entries. The grammar examples demonstrate syntactic form, so an identifier in a fragment can stand for an already-declared name.
 
 \Needspace{15\baselineskip}
-\subsection{One example and two parse trees per rule}
+\subsection{One example, two derivations, and one parse tree per rule}
 \label{sec:rule-examples}
 
-Each numbered rule below has one source example, rooted at the rule it illustrates. Rule fragments such as an expression or a block are shown at their own root. The two bracketed trees have the same terminal leaves in source order. In each tree, \codeinline{Name\#n[...]} means the named nonterminal expands at step \codeinline{n} to the children in brackets. Read step numbers in increasing order. The leftmost tree expands the leftmost remaining nonterminal at each step, and the rightmost tree expands the rightmost. An absent optional or empty repetition contributes no child. An entry such as \codeinline{IDENT:age} shows the terminal category and its lexeme.
+Each numbered rule has one designated source example. A fragment starts at the rule it illustrates. Each derivation starts with that rule's nonterminal. Every line beginning with \codeinline{=>} shows the full result after expanding one nonterminal. The leftmost derivation expands the leftmost remaining nonterminal, and the rightmost derivation expands the rightmost one. Indented continuation lines belong to the preceding step.
+
+One bracketed parse tree shows the structure shared by the two derivations. In \codeinline{Name[ ... ]}, \codeinline{Name} is the parent and the entries in brackets are its children in source order. An entry such as \codeinline{IDENT:age} gives a terminal category and its lexeme. An absent optional or empty repetition contributes no child.
 
 \input{build/syntax-proposal/examples.tex}
