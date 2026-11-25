@@ -1,0 +1,38 @@
+ARRAY numbers = [2, 4, 6, 8, 10];
+INTEGER target = 8;
+INTEGER low = 0;
+INTEGER high = 4;
+INTEGER a, b, c;
+INTEGER mid;
+BOOLEAN found = FALSE;
+WHILE (low <= high AND NOT found) {
+    mid = (low + high) DIV 2;
+    IF (numbers[mid] == target) {
+        found = TRUE;
+        OUTPUT "Found at index ", mid;
+    } ELSE IF (numbers[mid] < target) {
+        low = mid + 1;
+    } ELSE {
+        high = mid - 1;
+    }
+}
+IF (NOT found) { OUTPUT "Not found"; }
+INTEGER choice;
+INPUT choice;
+SWITCH (choice) {
+    CASE 1:
+        OUTPUT "Search";
+        BREAK;
+    CASE -2:
+        OUTPUT THE choice;
+        BREAK;
+    DEFAULT:
+        OUTPUT "Unknown choice";
+        BREAK;
+}
+a = b;
+a = 1;
+SET a = "hello";
+a = 3 + 2 * 5 / 5 + c;
+IF (a > 1) { a = 2; } ELSE { a = 3; }
+WHILE (a < 3) { WHILE (b < 3) { b = b + 1; } }
