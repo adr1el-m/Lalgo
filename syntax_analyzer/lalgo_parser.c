@@ -65,11 +65,7 @@ typedef struct { int type, line, col; char *lex; } Tok;
 /* ========================================================================== */
 
 /* Symbol Table.txt row layout written by the lexer:
- *   "%-5d %-16s %-30s %-9s %s"  -> No. | Token | Classification | Line:Col | Lexeme
- *   columns start at offsets 0, 6, 23, 54, 64                                   */
-#define COL_TOKEN 6
-#define COL_POS   54
-#define COL_LEXEME 64
+ *   "%-5d %-16s %-30s %-9s %s"  -> No. | Token | Classification | Line:Col | Lexeme */
 
 static FILE *fin;
 static int   in_table, last_line = 1, last_col = 1;
@@ -95,12 +91,26 @@ static char *dup_str(const char *s)
 /* returns 0 at the end of the table */
 static int read_raw(Tok *t)
 {
-    char line[4096], name[17];
+    static char *line = NULL;
+    static size_t cap = 0;
     size_t n;
-    int ln, cl, k;
+    int ln, cl;
 
-    while (fgets(line, sizeof line, fin)) {
+    if (!line) {
+        cap = 4096;
+        line = malloc(cap);
+        if (!line) { fprintf(stderr, "out of memory\n"); exit(2); }
+    }
+
+    while (fgets(line, (int)cap, fin)) {
         n = strlen(line);
+        while (n > 0 && line[n - 1] != '\n' && !feof(fin)) {
+            cap *= 2;
+            line = realloc(line, cap);
+            if (!line) { fprintf(stderr, "out of memory\n"); exit(2); }
+            if (!fgets(line + n, (int)(cap - n), fin)) break;
+            n += strlen(line + n);
+        }
         while (n && (line[n - 1] == '\n' || line[n - 1] == '\r')) line[--n] = '\0';
         if (!in_table) {                       /* skip the title lines            */
             if (strncmp(line, "---", 3) == 0) in_table = 1;
@@ -108,16 +118,37 @@ static int read_raw(Tok *t)
         }
         if (n == 0) continue;
         if (strncmp(line, "Total entries", 13) == 0) return 0;
-        if (n <= COL_LEXEME) continue;         /* not a data row                  */
 
-        memcpy(name, line + COL_TOKEN, 16);
-        name[16] = '\0';
-        for (k = 15; k >= 0 && name[k] == ' '; k--) name[k] = '\0';
-        if (sscanf(line + COL_POS, "%d:%d", &ln, &cl) != 2) continue;
+        /* Parse: <No.> <spaces> <Token> <spaces> <Classification> <spaces> <Line:Col> <spaces> <Lexeme> */
+        char *p_cur = line;
+        char name[32];
+        int k = 0;
+        while (*p_cur >= '0' && *p_cur <= '9') p_cur++;
+        if (p_cur == line || *p_cur != ' ') continue;
+        while (*p_cur == ' ') p_cur++;
+        while (*p_cur && *p_cur != ' ' && k < (int)sizeof(name) - 1) name[k++] = *p_cur++;
+        name[k] = '\0';
+        if (k == 0) continue;
+
+        /* Find <Line>:<Col> field separated by spaces */
+        char *pos = NULL;
+        for (char *s = p_cur; *s; s++) {
+            if (s[0] == ' ' && s[1] >= '0' && s[1] <= '9') {
+                char *q = s + 1;
+                while (*q >= '0' && *q <= '9') q++;
+                if (*q == ':' && q[1] >= '0' && q[1] <= '9') {
+                    char *r = q + 1;
+                    while (*r >= '0' && *r <= '9') r++;
+                    if (*r == ' ') { pos = s + 1; p_cur = r; break; }
+                }
+            }
+        }
+        if (!pos || sscanf(pos, "%d:%d", &ln, &cl) != 2) continue;
+        while (*p_cur == ' ') p_cur++;
 
         t->type = type_of(name);
         t->line = ln; t->col = cl;
-        t->lex  = dup_str(line + COL_LEXEME);
+        t->lex  = dup_str(p_cur);
         return 1;
     }
     return 0;
@@ -166,18 +197,32 @@ static void push(Tok t)
     B[blen++] = t;
 }
 
+static void free_statement_tokens(void)
+{
+    int i;
+    for (i = 0; i < blen; i++) free(B[i].lex);
+    blen = 0;
+}
+
+static int is_block_starter(int t)
+{
+    return t == K_KW_IF || t == K_KW_ELSE || t == K_KW_WHILE ||
+           t == K_KW_SWITCH || t == K_KW_FOR || t == K_LBRACE;
+}
+
 static void collect_statement(void)
 {
-    int depth = 0;
+    int depth = 0, track_braces = 0;
     Tok t;
-    blen = 0;
+    free_statement_tokens();
     for (;;) {
         t = next_tok();
         push(t);
+        if (blen == 1) track_braces = is_block_starter(t.type);
         if (t.type == K_EOF) return;
-        if (t.type == K_LBRACE) depth++;
-        else if (t.type == K_RBRACE) {
-            depth--;
+        if (track_braces && t.type == K_LBRACE) depth++;
+        else if (t.type == K_RBRACE && (track_braces || blen == 1)) {
+            if (track_braces) depth--;
             if (depth <= 0) {
                 /* one token of lookahead: ELSE extends an IF chain */
                 if (depth == 0 && peek_tok().type == K_KW_ELSE) continue;
@@ -570,7 +615,7 @@ static void parse_while(void)                              /* R24 - R28 */
     log_set(e, while_count > w0 ? "R27 NestedWhile" : "R26 PlainWhile");
 }
 
-static void parse_arm_body(const char *what)
+static int parse_arm_body(const char *what)
 {
     while (cur() != K_KW_BREAK && cur() != K_KW_CASE && cur() != K_KW_DEFAULT &&
            cur() != K_RBRACE && cur() != K_EOF) {
@@ -581,16 +626,18 @@ static void parse_arm_body(const char *what)
     if (cur() == K_KW_BREAK) {
         p++;
         expect(K_SEMICOLON, "';' after BREAK");
+        return 1;
     } else if (cur() == K_EOF) {
         fail_found("expected BREAK; to end the %s arm", what);
     } else {
         report(&B[p], 1, "expected BREAK; to end the %s arm", what);
     }
+    return 0;
 }
 
 static void parse_switch(void)                             /* R42 - R45 */
 {
-    int e = log_begin(), ncase = 0;
+    int e = log_begin(), ncase = 0, arms_ok = 1;
     ctx = "SWITCH statement";
     p++;
     expect(K_LPAREN, "'(' after SWITCH");
@@ -605,17 +652,17 @@ static void parse_switch(void)                             /* R42 - R45 */
                  cur() == K_TRUE || cur() == K_FALSE) p++;
         else fail_found("expected a case label (integer, character, string, TRUE or FALSE)");
         expect(K_COLON, "':' after the case label");
-        parse_arm_body("CASE");
+        if (!parse_arm_body("CASE")) arms_ok = 0;
         ncase++;
     }
     if (ncase == 0) fail_found("expected at least one CASE arm");
     if (cur() != K_KW_DEFAULT) fail_found("expected a DEFAULT arm as the last arm");
     p++;
     expect(K_COLON, "':' after DEFAULT");
-    parse_arm_body("DEFAULT");
+    if (!parse_arm_body("DEFAULT")) arms_ok = 0;
     depth_lvl--;
     expect(K_RBRACE, "'}' to close the SWITCH");
-    log_set(e, "R42 SwitchStmt");
+    if (arms_ok) log_set(e, "R42 SwitchStmt");
 }
 
 /* ========================================================================== */
@@ -698,6 +745,9 @@ int main(int argc, char **argv)
     }
 
     printf("=== RESULT: %d statement(s) checked, %d syntax error(s) ===\n", number, total_errors);
+    free_statement_tokens();
+    free(B);
+    if (has_peek) free(peeked.lex);
     fclose(fin);
     return total_errors > 0 ? 1 : 0;
 }

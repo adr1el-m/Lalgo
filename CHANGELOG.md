@@ -1,5 +1,10 @@
 # LAlgo specification change log
 
+## 2026-11-25 — C99 recursive-descent syntax analyzer alignment
+
+- Updated Sections 3.6 and 3.7 of `LAlgo Language Design Specification` to reflect the implemented C99 recursive-descent parser (`syntax_analyzer/lalgo_parser.c`), its `Symbol Table.txt` token-by-token handoff, statement-boundary collection, panic-mode recovery (`sync()` + `setjmp`/`longjmp`), and concrete diagnostic message format.
+- Verified 1-to-1 consistency across all 45 EBNF rules (`R01`–`R45`), the 288-state unified DFA lexer (`lexical_analyzer/lalgo_unified.c`), and the 10-tier operator precedence table.
+
 ## Switch and case checking revision
 
 - Added uppercase `SWITCH`, `CASE`, `DEFAULT`, and `BREAK` to the unified DFA.

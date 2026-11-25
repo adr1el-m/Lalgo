@@ -3,12 +3,18 @@ CFLAGS = -std=c99 -Wall -Wextra -Wpedantic -Werror
 
 SOURCE ?= syntax_proposal/switch_sample.lal
 
-.PHONY: all lexer syntax test papers guide
-all: lexer test
+.PHONY: all lexer parser syntax test papers guide
+all: lexer parser test
 
 lexer: build/lalgo
 
+parser: build/lalgo_parser
+
 build/lalgo: lexical_analyzer/lalgo_unified.c
+	mkdir -p build
+	$(CC) $(CFLAGS) $< -o $@
+
+build/lalgo_parser: syntax_analyzer/lalgo_parser.c
 	mkdir -p build
 	$(CC) $(CFLAGS) $< -o $@
 
