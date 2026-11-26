@@ -77,6 +77,135 @@ Panic-mode recovery is implemented in \codeinline{sync()} and \codeinline{statem
 
 Semantic checking is scheduled separately. It will use the syntax structure to check types and declarations and maintain semantic symbol-table entries. The grammar examples demonstrate syntactic form, so an identifier in a fragment can stand for an already-declared name.
 
+\subsection{Syntax Transition Diagram (Pushdown Automaton)}
+\label{sec:syntax-pda}
+
+While the lexical analyzer is modeled as a deterministic finite automaton (DFA) without memory, LAlgo's context-free syntax (nested braces, parenthesized expressions, chained \kw{IF}--\kw{ELSE}, and nested \kw{SWITCH} blocks) requires a stack. Formally, the syntax recognizer corresponds to a \textbf{Pushdown Automaton (PDA)} $M = (Q, \Sigma, \Gamma, \delta, q_0, Z_0, F)$:
+\begin{itemize}
+  \item $Q = \{q_0, q_{\mathrm{parse}}, q_{\mathrm{err}}, q_{\mathrm{acc}}\}$ is the finite set of control states.
+  \item $\Sigma$ is the set of lexical terminals emitted in \codeinline{Symbol Table.txt} (plus \token{EOF}).
+  \item $\Gamma = V \cup \Sigma \cup \{Z_0\}$ is the stack alphabet, where $V$ is the set of grammar nonterminals and $Z_0$ is the bottom-of-stack marker.
+  \item $q_0$ is the start state, $Z_0$ is the initial stack symbol, and $F = \{q_{\mathrm{acc}}\}$ is the accepting state.
+\end{itemize}
+
+In the transition labels $a,\, X / \gamma$ below, $a \in \Sigma \cup \{\varepsilon\}$ is the consumed lookahead terminal, $X \in \Gamma$ is the symbol popped from the top of the stack, and $\gamma \in \Gamma^*$ is the string pushed onto the stack (with the leftmost symbol of $\gamma$ on top).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  ->, >=Stealth, node distance=34mm, thick,
+  state/.style={circle, draw=pupmaroon, fill=pupcream, minimum size=13mm, font=\small\bfseries, text=pupdark},
+  accepting/.style={state, double, double distance=2pt}
+]
+  \node[state, initial, initial text={Start}] (q0) {$q_0$};
+  \node[state, right=28mm of q0] (qp) {$q_{\mathrm{parse}}$};
+  \node[accepting, right=30mm of qp] (qa) {$q_{\mathrm{acc}}$};
+  \node[state, below=24mm of qp] (qe) {$q_{\mathrm{err}}$};
+
+  \path
+    (q0) edge node[above, align=center, font=\scriptsize] {$\varepsilon,\, Z_0 / \mathrm{Program}\, Z_0$} (qp)
+    (qp) edge[loop above, looseness=7] node[above, align=center, font=\scriptsize]
+      {\textbf{Expand / Match:}\\
+       $\varepsilon,\, A / \alpha$ \;(for $A \to \alpha$)\\
+       $t,\, t / \varepsilon$ \;(for $t \in \Sigma$)} (qp)
+    (qp) edge node[above, align=center, font=\scriptsize] {$\mathrm{EOF},\, Z_0 / Z_0$} (qa)
+    (qp) edge[bend right=20] node[left, align=center, font=\scriptsize] {mismatch on $t$,\\stack top $X$} (qe)
+    (qe) edge[loop right, looseness=6] node[right, align=center, font=\scriptsize]
+      {$t \notin \mathrm{SYNC},\, X / X$\\(skip \& track depth)} (qe)
+    (qe) edge[bend right=20] node[right, align=center, font=\scriptsize]
+      {$t \in \mathrm{SYNC},\, X / \varepsilon$\\(resume at depth 0)} (qp);
+\end{tikzpicture}
+\caption{Pushdown Automaton (PDA) syntax transition diagram for LAlgo, including panic-mode recovery ($q_{\mathrm{err}}$).}
+\label{fig:syntax-pda}
+\end{figure}
+
+Table~\ref{tab:pda-transitions} summarizes the representative PDA transitions $\delta$ executed during top-down parsing. Each nonterminal expansion mirrors the recursive-descent call stack of \codeinline{lalgo\_parser.c}.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}L{15mm} L{30mm} L{26mm} L{17mm} Y@{}}
+\toprule
+\textbf{State} & \textbf{Input} & \textbf{Stack Top} & \textbf{Next State} & \textbf{Stack Action (Push)} \\
+\midrule
+$q_0$ & $\varepsilon$ & $Z_0$ & $q_{\mathrm{parse}}$ & $\mathrm{Program}\; Z_0$ \\
+$q_{\mathrm{parse}}$ & $\varepsilon$ & $\mathrm{Program}$ & $q_{\mathrm{parse}}$ & $\mathrm{StmtList}\; \mathrm{EOF}$ \\
+$q_{\mathrm{parse}}$ & $t \in \mathrm{FIRST}(\mathrm{Stmt})$ & $\mathrm{StmtList}$ & $q_{\mathrm{parse}}$ & $\mathrm{Statement}\; \mathrm{StmtList}$ \\
+$q_{\mathrm{parse}}$ & $t \in \{\mathrm{\}},\, \mathrm{BREAK},\, \mathrm{EOF}\}$ & $\mathrm{StmtList}$ & $q_{\mathrm{parse}}$ & $\varepsilon$ (nullable tail) \\
+$q_{\mathrm{parse}}$ & \kw{IF} & $\mathrm{Statement}$ & $q_{\mathrm{parse}}$ & \codeinline{IF ( Expression ) Block ElseTail} \\
+$q_{\mathrm{parse}}$ & \kw{WHILE} & $\mathrm{Statement}$ & $q_{\mathrm{parse}}$ & \codeinline{WHILE ( Expression ) Block} \\
+$q_{\mathrm{parse}}$ & \kw{SWITCH} & $\mathrm{Statement}$ & $q_{\mathrm{parse}}$ & \codeinline{SWITCH ( Reference ) \{ SwitchCases SwitchDefault \}} \\
+$q_{\mathrm{parse}}$ & $t \in \Sigma$ & $t$ & $q_{\mathrm{parse}}$ & $\varepsilon$ (consume terminal $t$) \\
+$q_{\mathrm{parse}}$ & unexpected $t$ & $X$ & $q_{\mathrm{err}}$ & $X$ (enter panic recovery) \\
+$q_{\mathrm{err}}$ & $t \notin \mathrm{SYNC}$ & $X$ & $q_{\mathrm{err}}$ & $X$ (discard token, update bracket depth) \\
+$q_{\mathrm{err}}$ & $t \in \mathrm{SYNC}$ & $X$ & $q_{\mathrm{parse}}$ & $\varepsilon$ (resynchronize at depth~0) \\
+$q_{\mathrm{parse}}$ & \token{EOF} & $Z_0$ & $q_{\mathrm{acc}}$ & $Z_0$ (accept program) \\
+\bottomrule
+\end{tabularx}
+\caption{Representative PDA transition function $\delta$ for LAlgo syntax analysis.}
+\label{tab:pda-transitions}
+\end{table}
+
+\subsection{Predictive Parsing Table}
+\label{sec:parsing-table}
+
+Because LAlgo uses a top-down recursive-descent parser (\codeinline{lalgo\_parser.c}), its statement dispatch can be expressed as a left-factored \textbf{LL(1) predictive parsing table} $M[A, t]$ indexed by nonterminal $A$ and lookahead terminal $t$. Where multiple EBNF rules share a leading keyword (such as \kw{OUTPUT} for \codeinline{R06}--\codeinline{R08}, \kw{SET}/\token{IDENT} for \codeinline{R10}--\codeinline{R12}, \kw{IF} for \codeinline{R20}--\codeinline{R22}, and \kw{WHILE} for \codeinline{R26}--\codeinline{R27}), the parser left-factors the common prefix and resolves the exact numbered rule from the trailing tokens or block contents.
+
+\begingroup
+\small
+\setlength{\LTpre}{4pt}
+\setlength{\LTpost}{4pt}
+\begin{longtable}{@{}L{28mm} L{46mm} L{82mm}@{}}
+\caption{LL(1) predictive parsing table for LAlgo statements, control flow, and expressions.}
+\label{tab:parsing-table} \\
+\toprule
+\textbf{Nonterminal} & \textbf{Lookahead $t$} & \textbf{Production / Parser Action} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Nonterminal} & \textbf{Lookahead $t$} & \textbf{Production / Parser Action} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\codeinline{Program} & any stmt starter, \token{EOF} & $\mathrm{Program} \to \mathrm{StmtList}\;\mathrm{EOF}$ \\
+\codeinline{StmtList} & \kw{INPUT}, \kw{OUTPUT}, \kw{SET}, \token{IDENT}, \textit{Type}, \kw{IF}, \kw{WHILE}, \kw{SWITCH} & $\mathrm{StmtList} \to \mathrm{Statement}\;\mathrm{StmtList}$ \\
+\codeinline{StmtList} & \codeinline{\}}, \kw{BREAK}, \token{EOF} & $\mathrm{StmtList} \to \varepsilon$ \\
+\codeinline{Statement} & \kw{INPUT} & $\mathrm{Statement} \to \mathrm{InputStmt}$ (\codeinline{R04}) \\
+\codeinline{Statement} & \kw{OUTPUT} & $\mathrm{Statement} \to \mathrm{OutputStmt}$ (\codeinline{R06}--\codeinline{R08}) \\
+\codeinline{Statement} & \kw{SET}, \token{IDENT} & $\mathrm{Statement} \to \mathrm{Assignment}$ (\codeinline{R10}--\codeinline{R12}) \\
+\codeinline{Statement} & \kw{INTEGER}, \kw{DECIMAL}, \kw{CHARACTER}, \kw{BOOLEAN}, \kw{ARRAY}, \kw{STRING} & $\mathrm{Statement} \to \mathrm{Declaration}$ (\codeinline{R14}--\codeinline{R16}) \\
+\codeinline{Statement} & \kw{IF}, \kw{SWITCH} & $\mathrm{Statement} \to \mathrm{Conditional}$ (\codeinline{R20}--\codeinline{R22}, \codeinline{R42}) \\
+\codeinline{Statement} & \kw{WHILE} & $\mathrm{Statement} \to \mathrm{Loop}$ (\codeinline{R26}--\codeinline{R27}) \\
+\codeinline{Block} & \codeinline{\{} & $\mathrm{Block} \to \texttt{\{} \; \mathrm{StmtList} \; \texttt{\}}$ (\codeinline{R03}) \\
+\codeinline{InputStmt} & \kw{INPUT} & $\mathrm{InputStmt} \to \kw{INPUT}\;\mathrm{IDENT}\;\texttt{;}$ (\codeinline{R04}) \\
+\codeinline{OutputStmt} & \kw{OUTPUT} & $\mathrm{OutputStmt} \to \kw{OUTPUT}\; [\kw{THE}]\; \mathrm{OutputTail}\;\texttt{;}$ \\
+\codeinline{OutputTail} & \token{STR\_LIT} (followed by \codeinline{;}) & $\mathrm{OutputTail} \to \mathrm{STR\_LIT}$ (\codeinline{R06}) \\
+\codeinline{OutputTail} & \token{STR\_LIT} (followed by \codeinline{,}) & $\mathrm{OutputTail} \to \mathrm{STR\_LIT}\;\texttt{,}\;\mathrm{Reference}$ (\codeinline{R08}) \\
+\codeinline{OutputTail} & \token{IDENT} & $\mathrm{OutputTail} \to \mathrm{Reference}$ (\codeinline{R07}) \\
+\codeinline{Assignment} & \kw{SET}, \token{IDENT} & $\mathrm{Assignment} \to [\kw{SET}]\;\mathrm{Reference}\;\texttt{=}\;\mathrm{AssignRHS}\;\texttt{;}$ (\codeinline{R10}--\codeinline{R12}) \\
+\codeinline{Declaration} & \textit{Type} & $\mathrm{Declaration} \to \mathrm{Type}\;\mathrm{IDENT}\;\mathrm{DeclTail}$ \\
+\codeinline{DeclTail} & \codeinline{;} & $\mathrm{DeclTail} \to \texttt{;}$ (\codeinline{R14}) \\
+\codeinline{DeclTail} & \codeinline{,} & $\mathrm{DeclTail} \to \texttt{,}\;\mathrm{IDENT}\;\{\texttt{,}\;\mathrm{IDENT}\}\;\texttt{;}$ (\codeinline{R15}) \\
+\codeinline{DeclTail} & \codeinline{=} & $\mathrm{DeclTail} \to \texttt{=}\;\mathrm{Expression}\;\texttt{;}$ (\codeinline{R16}) \\
+\codeinline{Conditional} & \kw{IF} & $\mathrm{Conditional} \to \mathrm{IfHead}\;\mathrm{ElseTail}$ \\
+\codeinline{Conditional} & \kw{SWITCH} & $\mathrm{Conditional} \to \mathrm{SwitchStmt}$ (\codeinline{R42}) \\
+\codeinline{ElseTail} & \kw{ELSE} (next: \kw{IF}) & $\mathrm{ElseTail} \to \mathrm{ElseIf}\;\{\mathrm{ElseIf}\}\;\kw{ELSE}\;\mathrm{Block}$ (\codeinline{R22}) \\
+\codeinline{ElseTail} & \kw{ELSE} (next: \codeinline{\{}) & $\mathrm{ElseTail} \to \kw{ELSE}\;\mathrm{Block}$ (\codeinline{R21}) \\
+\codeinline{ElseTail} & any stmt starter, \codeinline{\}}, \kw{BREAK}, \token{EOF} & $\mathrm{ElseTail} \to \varepsilon$ (\codeinline{R20}) \\
+\codeinline{Loop} & \kw{WHILE} & $\mathrm{Loop} \to \kw{WHILE}\;\texttt{(}\;\mathrm{Expression}\;\texttt{)}\;\mathrm{Block}$ (\codeinline{R26}/\codeinline{R27}) \\
+\codeinline{SwitchStmt} & \kw{SWITCH} & $\mathrm{SwitchStmt} \to \kw{SWITCH}\;\texttt{(}\;\mathrm{Reference}\;\texttt{)}\;\texttt{\{}\;\mathrm{SwitchCases}\;\mathrm{SwitchDefault}\;\texttt{\}}$ \\
+\codeinline{SwitchCases} & \kw{CASE} & $\mathrm{SwitchCases} \to \mathrm{SwitchCase}\;\mathrm{SwitchCases}'$ (\codeinline{R43}) \\
+\codeinline{SwitchDefault} & \kw{DEFAULT} & $\mathrm{SwitchDefault} \to \kw{DEFAULT}\;\texttt{:}\;\mathrm{StmtList}\;\kw{BREAK}\;\texttt{;}$ (\codeinline{R44}) \\
+\codeinline{CaseLabel} & \codeinline{-}, \token{INT\_LIT}, \token{CHAR\_LIT}, \token{STR\_LIT}, \kw{TRUE}, \kw{FALSE} & $\mathrm{CaseLabel} \to [\texttt{-}]\;\mathrm{INT\_LIT} \mid \mathrm{CHAR\_LIT} \mid \mathrm{STR\_LIT} \mid \kw{TRUE} \mid \kw{FALSE}$ (\codeinline{R45}) \\
+\codeinline{Expression} & \kw{NOT}, \codeinline{-}, \codeinline{(}, \codeinline{[}, \token{IDENT}, \textit{Literal} & $\mathrm{Expression} \to \mathrm{Conjunction}\;\mathrm{Expr}'$ (\codeinline{R29}) \\
+\codeinline{Primary} & \textit{Literal} & $\mathrm{Primary} \to \mathrm{Literal}$ (\codeinline{R38}, \codeinline{R40}) \\
+\codeinline{Primary} & \token{IDENT} & $\mathrm{Primary} \to \mathrm{Reference}$ (\codeinline{R38}, \codeinline{R39}) \\
+\codeinline{Primary} & \codeinline{(} & $\mathrm{Primary} \to \texttt{(}\;\mathrm{Expression}\;\texttt{)}$ (\codeinline{R38}) \\
+\codeinline{Primary} & \codeinline{[} & $\mathrm{Primary} \to \mathrm{ArrayLiteral}$ (\codeinline{R38}, \codeinline{R41}) \\
+\end{longtable}
+\endgroup
+
 \Needspace{15\baselineskip}
 \subsection{One example, two derivations, and one parse tree per rule}
 \label{sec:rule-examples}
