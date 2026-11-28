@@ -1,0 +1,179 @@
+/*
+ * LAlgo parser demo
+ * Each section highlights a different part of the grammar.
+ */
+
+/* Single, list, and initialized declarations using all six types. */
+BOOLEAN true;
+INTEGER choice;
+INTEGER index, row, column;
+INTEGER total = 0;
+DECIMAL ratio = 0.5;
+CHARACTER grade = 'A';
+BOOLEAN active = TRUE;
+STRING title = "Parser demo";
+ARRAY numbers = [2, 4, 6, 8];
+ARRAY scratch = [];
+
+/* INPUT and the three OUTPUT forms: text, reference, and mixed. */
+OUTPUT "Enter a choice from 1 to 4";
+INPUT choice;
+OUTPUT title;
+OUTPUT "First number: ", numbers[0];
+
+/* Assign a reference, a literal, and an expression. SET is optional. */
+index = choice;
+SET row = 0;
+column = 0;
+SET numbers[1] = numbers[0];
+ratio = 0.75;
+grade = 'B';
+active = FALSE;
+title = "Checking expressions";
+
+/*
+ * Parentheses, unary minus, exponentiation, multiplication, division,
+ * integer division, remainder, addition, and subtraction.
+ */
+total = -(2 ^ 3 ^ 2) + (6 * 4 / 2) + (7 DIV 2) - (7 % 2);
+
+/* IF, IF/ELSE, and an ELSE IF chain with a final ELSE. */
+IF (NOT active AND (choice >= 1 AND choice <= 4)) {
+    OUTPUT "Choice is in range";
+}
+
+IF (choice != 0 OR active) {
+    OUTPUT choice;
+} ELSE {
+    OUTPUT "No choice selected";
+}
+
+IF (choice < 0) {
+    OUTPUT "Negative";
+} ELSE IF (choice == 0) {
+    OUTPUT "Zero";
+} ELSE IF (choice > 4) {
+    OUTPUT "Above range";
+} ELSE {
+    OUTPUT "Positive and in range";
+}
+
+/* A plain WHILE followed by nested WHILE blocks. */
+index = 0;
+WHILE (index < 4) {
+    OUTPUT numbers[index];
+    index = index + 1;
+}
+
+WHILE (row < 2) {
+    column = 0;
+    WHILE (column < 2) {
+        OUTPUT "Column: ", column;
+        column = column + 1;
+    }
+    row = row + 1;
+}
+
+/*
+ * SWITCH selectors may be references or indexed references.
+ * CASE accepts signed integers, characters, strings, and Booleans.
+ * Every arm ends with BREAK; and DEFAULT is last.
+ */
+SWITCH (numbers[0]) {
+    CASE 2:
+        SWITCH (choice) {
+            CASE -1:
+                OUTPUT "Exit";
+                BREAK;
+            DEFAULT:
+                BREAK;
+        }
+        BREAK;
+    DEFAULT:
+        OUTPUT "Unexpected first number";
+        BREAK;
+}
+
+SWITCH (grade) {
+    CASE 'B':
+        OUTPUT "Grade B";
+        BREAK;
+    DEFAULT:
+        BREAK;
+}
+
+SWITCH (title) {
+    CASE "Checking expressions":
+        OUTPUT title;
+        BREAK;
+    DEFAULT:
+        BREAK;
+}
+
+SWITCH (active) {
+    CASE TRUE:
+        OUTPUT "Active";
+        BREAK;
+    CASE FALSE:
+        OUTPUT "Inactive";
+        BREAK;
+    DEFAULT:
+        BREAK;
+}
+
+/*
+ * Intentional syntax errors start here. Run the C analyzer on the lexer's
+ * symbol table to see multiple diagnostics and recovery in one run.
+ */
+
+/* Missing variable name, assignment expression, and OUTPUT comma. */
+INPUT ;
+total = ;
+OUTPUT "Total: " total;
+
+/* ELSE and BREAK require an enclosing construct. */
+ELSE {
+    OUTPUT "Orphan ELSE";
+}
+BREAK;
+
+/* An ELSE IF chain requires a final ELSE block. */
+IF (choice < 0) {
+    OUTPUT "Negative";
+} ELSE IF (choice == 0) {
+    OUTPUT "Zero";
+}
+
+/* Missing ')' in a WHILE header. */
+WHILE (index < 4 {
+    index = index + 1;
+}
+
+/* Missing semicolon inside a block. Recovery resumes at OUTPUT. */
+WHILE (index < 4) {
+    index = index + 1
+    OUTPUT index;
+}
+
+/* The first CASE is missing BREAK; the second is missing its colon. */
+SWITCH (choice) {
+    CASE 1:
+        OUTPUT "Missing BREAK";
+    CASE 2
+        BREAK;
+    DEFAULT:
+        BREAK;
+}
+
+/* DEFAULT is required even when there is a valid CASE. */
+SWITCH (choice) {
+    CASE 1:
+        BREAK;
+}
+
+/* Only WHILE loops are supported. */
+FOR (index) {
+}
+
+/* A valid final statement shows that parsing continued after the errors. */
+OUTPUT "Recovered after the intentional errors";

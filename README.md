@@ -81,6 +81,19 @@ make syntax SOURCE=syntax_proposal/checking_sample.lal
 
 `make test` compiles the selected source with `-std=c99 -Wall -Wextra -Wpedantic -Werror` and runs the checks. `make lexer` builds just the executable.
 
+`make syntax SOURCE=path/to/program.lal` prints the program's parse tree after a successful syntax check. The tree shows grammar rules and the source tokens they contain. The C analyzer built with `make parser` reads the lexer's `Symbol Table.txt` and prints a tree after each successful statement check.
+
+Use `--tree-file` with a new filename to save the trees separately while keeping syntax results in the console. The unified demo includes intentional errors, so use the C analyzer to see both diagnostics and trees from the same run.
+
+```sh
+make lexer parser
+./build/lalgo syntax_analyzer/test_unified.lal
+./build/lalgo_parser --tree-file "Parse Tree.txt"
+python3 syntax_proposal/check_syntax.py syntax_proposal/switch_sample.lal --tree-file switch-tree.txt
+```
+
+Run `./build/lalgo_parser "Symbol Table.txt" --parsing-table` to generate **`Parsing Table.txt` in the current working directory**. This tab-separated report lists the nonterminal, lookahead token, and production used at each source location in successful statements. It includes diagnostics for statements with errors and continues recording productions when parsing recovers. Each run with this option replaces the previous report.
+
 Each completed scan prints tokens and diagnostics, and overwrites **`Symbol Table.txt` in the current working directory**. It lists token occurrences, including comments and invalid lexemes, with classifications and positions. It is a lexical listing; declaration/scope resolution is future work. EOF appears in console output and is omitted from the listing file.
 
 Exit codes: `0` = no lexical errors, `1` = lexical errors reported, `2` = usage/input/output failure. The optional `t` argument enables state-transition tracing. Input filenames must end in `.lal` (case-insensitive).

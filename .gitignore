@@ -3,6 +3,7 @@ build/
 __pycache__/
 *.pyc
 Symbol Table.txt
+Parsing Table.txt
 *.aux
 *.fdb_latexmk
 *.fls

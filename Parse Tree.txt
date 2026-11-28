@@ -1,0 +1,1272 @@
+Statement 1 (line 7)
+  Parse tree
+  Statement
+    Declaration
+      Type
+        KW_INTEGER INTEGER
+      IDENT choice
+      SEMICOLON ;
+
+Statement 2 (line 8)
+  Parse tree
+  Statement
+    Declaration
+      Type
+        KW_INTEGER INTEGER
+      IDENT index
+      COMMA ,
+      IDENT row
+      COMMA ,
+      IDENT column
+      SEMICOLON ;
+
+Statement 3 (line 9)
+  Parse tree
+  Statement
+    Declaration
+      Type
+        KW_INTEGER INTEGER
+      IDENT total
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            INTEGER 0
+      SEMICOLON ;
+
+Statement 4 (line 10)
+  Parse tree
+  Statement
+    Declaration
+      Type
+        KW_DECIMAL DECIMAL
+      IDENT ratio
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            DECIMAL 0.5
+      SEMICOLON ;
+
+Statement 5 (line 11)
+  Parse tree
+  Statement
+    Declaration
+      Type
+        KW_CHARACTER CHARACTER
+      IDENT grade
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            CHAR 'A'
+      SEMICOLON ;
+
+Statement 6 (line 12)
+  Parse tree
+  Statement
+    Declaration
+      Type
+        KW_BOOLEAN BOOLEAN
+      IDENT active
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            TRUE TRUE
+      SEMICOLON ;
+
+Statement 7 (line 13)
+  Parse tree
+  Statement
+    Declaration
+      Type
+        KW_STRING STRING
+      IDENT title
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            STRING "Parser demo"
+      SEMICOLON ;
+
+Statement 8 (line 14)
+  Parse tree
+  Statement
+    Declaration
+      Type
+        KW_ARRAY ARRAY
+      IDENT numbers
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          ArrayLiteral
+                            LBRACKET [
+                            Expression
+                              Conjunction
+                                Negation
+                                  Equality
+                                    Comparison
+                                      Sum
+                                        Product
+                                          Unary
+                                            Power
+                                              Primary
+                                                Literal
+                                                  INTEGER 2
+                            COMMA ,
+                            Expression
+                              Conjunction
+                                Negation
+                                  Equality
+                                    Comparison
+                                      Sum
+                                        Product
+                                          Unary
+                                            Power
+                                              Primary
+                                                Literal
+                                                  INTEGER 4
+                            COMMA ,
+                            Expression
+                              Conjunction
+                                Negation
+                                  Equality
+                                    Comparison
+                                      Sum
+                                        Product
+                                          Unary
+                                            Power
+                                              Primary
+                                                Literal
+                                                  INTEGER 6
+                            COMMA ,
+                            Expression
+                              Conjunction
+                                Negation
+                                  Equality
+                                    Comparison
+                                      Sum
+                                        Product
+                                          Unary
+                                            Power
+                                              Primary
+                                                Literal
+                                                  INTEGER 8
+                            RBRACKET ]
+      SEMICOLON ;
+
+Statement 9 (line 15)
+  Parse tree
+  Statement
+    Declaration
+      Type
+        KW_ARRAY ARRAY
+      IDENT scratch
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          ArrayLiteral
+                            LBRACKET [
+                            RBRACKET ]
+      SEMICOLON ;
+
+Statement 10 (line 18)
+  Parse tree
+  Statement
+    OutputStmt
+      KW_OUTPUT OUTPUT
+      STRING "Enter a choice from 1 to 4"
+      SEMICOLON ;
+
+Statement 11 (line 19)
+  Parse tree
+  Statement
+    InputStmt
+      KW_INPUT INPUT
+      IDENT choice
+      SEMICOLON ;
+
+Statement 12 (line 20)
+  Parse tree
+  Statement
+    OutputStmt
+      KW_OUTPUT OUTPUT
+      Reference
+        IDENT title
+      SEMICOLON ;
+
+Statement 13 (line 21)
+  Parse tree
+  Statement
+    OutputStmt
+      KW_OUTPUT OUTPUT
+      STRING "First number: "
+      COMMA ,
+      Reference
+        IDENT numbers
+        LBRACKET [
+        Expression
+          Conjunction
+            Negation
+              Equality
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Literal
+                              INTEGER 0
+        RBRACKET ]
+      SEMICOLON ;
+
+Statement 14 (line 24)
+  Parse tree
+  Statement
+    Assignment
+      Reference
+        IDENT index
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Reference
+                            IDENT choice
+      SEMICOLON ;
+
+Statement 15 (line 25)
+  Parse tree
+  Statement
+    Assignment
+      NOISE_SET SET
+      Reference
+        IDENT row
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            INTEGER 0
+      SEMICOLON ;
+
+Statement 16 (line 26)
+  Parse tree
+  Statement
+    Assignment
+      Reference
+        IDENT column
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            INTEGER 0
+      SEMICOLON ;
+
+Statement 17 (line 27)
+  Parse tree
+  Statement
+    Assignment
+      NOISE_SET SET
+      Reference
+        IDENT numbers
+        LBRACKET [
+        Expression
+          Conjunction
+            Negation
+              Equality
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Literal
+                              INTEGER 1
+        RBRACKET ]
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Reference
+                            IDENT numbers
+                            LBRACKET [
+                            Expression
+                              Conjunction
+                                Negation
+                                  Equality
+                                    Comparison
+                                      Sum
+                                        Product
+                                          Unary
+                                            Power
+                                              Primary
+                                                Literal
+                                                  INTEGER 0
+                            RBRACKET ]
+      SEMICOLON ;
+
+Statement 18 (line 28)
+  Parse tree
+  Statement
+    Assignment
+      Reference
+        IDENT ratio
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            DECIMAL 0.75
+      SEMICOLON ;
+
+Statement 19 (line 29)
+  Parse tree
+  Statement
+    Assignment
+      Reference
+        IDENT grade
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            CHAR 'B'
+      SEMICOLON ;
+
+Statement 20 (line 30)
+  Parse tree
+  Statement
+    Assignment
+      Reference
+        IDENT active
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            FALSE FALSE
+      SEMICOLON ;
+
+Statement 21 (line 31)
+  Parse tree
+  Statement
+    Assignment
+      Reference
+        IDENT title
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            STRING "Checking expressions"
+      SEMICOLON ;
+
+Statement 22 (line 37)
+  Parse tree
+  Statement
+    Assignment
+      Reference
+        IDENT total
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      MINUS -
+                      Unary
+                        Power
+                          Primary
+                            LPAREN (
+                            Expression
+                              Conjunction
+                                Negation
+                                  Equality
+                                    Comparison
+                                      Sum
+                                        Product
+                                          Unary
+                                            Power
+                                              Primary
+                                                Literal
+                                                  INTEGER 2
+                                              CARET ^
+                                              Unary
+                                                Power
+                                                  Primary
+                                                    Literal
+                                                      INTEGER 3
+                                                  CARET ^
+                                                  Unary
+                                                    Power
+                                                      Primary
+                                                        Literal
+                                                          INTEGER 2
+                            RPAREN )
+                  PLUS +
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          LPAREN (
+                          Expression
+                            Conjunction
+                              Negation
+                                Equality
+                                  Comparison
+                                    Sum
+                                      Product
+                                        Unary
+                                          Power
+                                            Primary
+                                              Literal
+                                                INTEGER 6
+                                        STAR *
+                                        Unary
+                                          Power
+                                            Primary
+                                              Literal
+                                                INTEGER 4
+                                        SLASH /
+                                        Unary
+                                          Power
+                                            Primary
+                                              Literal
+                                                INTEGER 2
+                          RPAREN )
+                  PLUS +
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          LPAREN (
+                          Expression
+                            Conjunction
+                              Negation
+                                Equality
+                                  Comparison
+                                    Sum
+                                      Product
+                                        Unary
+                                          Power
+                                            Primary
+                                              Literal
+                                                INTEGER 7
+                                        DIV DIV
+                                        Unary
+                                          Power
+                                            Primary
+                                              Literal
+                                                INTEGER 2
+                          RPAREN )
+                  MINUS -
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          LPAREN (
+                          Expression
+                            Conjunction
+                              Negation
+                                Equality
+                                  Comparison
+                                    Sum
+                                      Product
+                                        Unary
+                                          Power
+                                            Primary
+                                              Literal
+                                                INTEGER 7
+                                        PERCENT %
+                                        Unary
+                                          Power
+                                            Primary
+                                              Literal
+                                                INTEGER 2
+                          RPAREN )
+      SEMICOLON ;
+
+Statement 23 (line 40)
+  Parse tree
+  Statement
+    Conditional
+      IfHead
+        KW_IF IF
+        LPAREN (
+        Expression
+          Conjunction
+            Negation
+              NOT NOT
+              Negation
+                Equality
+                  Comparison
+                    Sum
+                      Product
+                        Unary
+                          Power
+                            Primary
+                              Reference
+                                IDENT active
+            AND AND
+            Negation
+              Equality
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            LPAREN (
+                            Expression
+                              Conjunction
+                                Negation
+                                  Equality
+                                    Comparison
+                                      Sum
+                                        Product
+                                          Unary
+                                            Power
+                                              Primary
+                                                Reference
+                                                  IDENT choice
+                                      GE >=
+                                      Sum
+                                        Product
+                                          Unary
+                                            Power
+                                              Primary
+                                                Literal
+                                                  INTEGER 1
+                                AND AND
+                                Negation
+                                  Equality
+                                    Comparison
+                                      Sum
+                                        Product
+                                          Unary
+                                            Power
+                                              Primary
+                                                Reference
+                                                  IDENT choice
+                                      LE <=
+                                      Sum
+                                        Product
+                                          Unary
+                                            Power
+                                              Primary
+                                                Literal
+                                                  INTEGER 4
+                            RPAREN )
+        RPAREN )
+        Block
+          LBRACE {
+          Statement
+            OutputStmt
+              KW_OUTPUT OUTPUT
+              STRING "Choice is in range"
+              SEMICOLON ;
+          RBRACE }
+
+Statement 24 (line 44)
+  Parse tree
+  Statement
+    Conditional
+      IfHead
+        KW_IF IF
+        LPAREN (
+        Expression
+          Conjunction
+            Negation
+              Equality
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Reference
+                              IDENT choice
+                NEQ !=
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Literal
+                              INTEGER 0
+          OR OR
+          Conjunction
+            Negation
+              Equality
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Reference
+                              IDENT active
+        RPAREN )
+        Block
+          LBRACE {
+          Statement
+            OutputStmt
+              KW_OUTPUT OUTPUT
+              Reference
+                IDENT choice
+              SEMICOLON ;
+          RBRACE }
+      KW_ELSE ELSE
+      Block
+        LBRACE {
+        Statement
+          OutputStmt
+            KW_OUTPUT OUTPUT
+            STRING "No choice selected"
+            SEMICOLON ;
+        RBRACE }
+
+Statement 25 (line 50)
+  Parse tree
+  Statement
+    Conditional
+      IfHead
+        KW_IF IF
+        LPAREN (
+        Expression
+          Conjunction
+            Negation
+              Equality
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Reference
+                              IDENT choice
+                  LT <
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Literal
+                              INTEGER 0
+        RPAREN )
+        Block
+          LBRACE {
+          Statement
+            OutputStmt
+              KW_OUTPUT OUTPUT
+              STRING "Negative"
+              SEMICOLON ;
+          RBRACE }
+      KW_ELSE ELSE
+      IfHead
+        KW_IF IF
+        LPAREN (
+        Expression
+          Conjunction
+            Negation
+              Equality
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Reference
+                              IDENT choice
+                EQ ==
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Literal
+                              INTEGER 0
+        RPAREN )
+        Block
+          LBRACE {
+          Statement
+            OutputStmt
+              KW_OUTPUT OUTPUT
+              STRING "Zero"
+              SEMICOLON ;
+          RBRACE }
+      KW_ELSE ELSE
+      IfHead
+        KW_IF IF
+        LPAREN (
+        Expression
+          Conjunction
+            Negation
+              Equality
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Reference
+                              IDENT choice
+                  GT >
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Literal
+                              INTEGER 4
+        RPAREN )
+        Block
+          LBRACE {
+          Statement
+            OutputStmt
+              KW_OUTPUT OUTPUT
+              STRING "Above range"
+              SEMICOLON ;
+          RBRACE }
+      KW_ELSE ELSE
+      Block
+        LBRACE {
+        Statement
+          OutputStmt
+            KW_OUTPUT OUTPUT
+            STRING "Positive and in range"
+            SEMICOLON ;
+        RBRACE }
+
+Statement 26 (line 61)
+  Parse tree
+  Statement
+    Assignment
+      Reference
+        IDENT index
+      ASSIGN =
+      Expression
+        Conjunction
+          Negation
+            Equality
+              Comparison
+                Sum
+                  Product
+                    Unary
+                      Power
+                        Primary
+                          Literal
+                            INTEGER 0
+      SEMICOLON ;
+
+Statement 27 (line 62)
+  Parse tree
+  Statement
+    Loop
+      WhileHead
+        KW_WHILE WHILE
+        LPAREN (
+        Expression
+          Conjunction
+            Negation
+              Equality
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Reference
+                              IDENT index
+                  LT <
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Literal
+                              INTEGER 4
+        RPAREN )
+      Block
+        LBRACE {
+        Statement
+          OutputStmt
+            KW_OUTPUT OUTPUT
+            Reference
+              IDENT numbers
+              LBRACKET [
+              Expression
+                Conjunction
+                  Negation
+                    Equality
+                      Comparison
+                        Sum
+                          Product
+                            Unary
+                              Power
+                                Primary
+                                  Reference
+                                    IDENT index
+              RBRACKET ]
+            SEMICOLON ;
+        Statement
+          Assignment
+            Reference
+              IDENT index
+            ASSIGN =
+            Expression
+              Conjunction
+                Negation
+                  Equality
+                    Comparison
+                      Sum
+                        Product
+                          Unary
+                            Power
+                              Primary
+                                Reference
+                                  IDENT index
+                        PLUS +
+                        Product
+                          Unary
+                            Power
+                              Primary
+                                Literal
+                                  INTEGER 1
+            SEMICOLON ;
+        RBRACE }
+
+Statement 28 (line 67)
+  Parse tree
+  Statement
+    Loop
+      WhileHead
+        KW_WHILE WHILE
+        LPAREN (
+        Expression
+          Conjunction
+            Negation
+              Equality
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Reference
+                              IDENT row
+                  LT <
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Literal
+                              INTEGER 2
+        RPAREN )
+      Block
+        LBRACE {
+        Statement
+          Assignment
+            Reference
+              IDENT column
+            ASSIGN =
+            Expression
+              Conjunction
+                Negation
+                  Equality
+                    Comparison
+                      Sum
+                        Product
+                          Unary
+                            Power
+                              Primary
+                                Literal
+                                  INTEGER 0
+            SEMICOLON ;
+        Statement
+          Loop
+            WhileHead
+              KW_WHILE WHILE
+              LPAREN (
+              Expression
+                Conjunction
+                  Negation
+                    Equality
+                      Comparison
+                        Sum
+                          Product
+                            Unary
+                              Power
+                                Primary
+                                  Reference
+                                    IDENT column
+                        LT <
+                        Sum
+                          Product
+                            Unary
+                              Power
+                                Primary
+                                  Literal
+                                    INTEGER 2
+              RPAREN )
+            Block
+              LBRACE {
+              Statement
+                OutputStmt
+                  KW_OUTPUT OUTPUT
+                  STRING "Column: "
+                  COMMA ,
+                  Reference
+                    IDENT column
+                  SEMICOLON ;
+              Statement
+                Assignment
+                  Reference
+                    IDENT column
+                  ASSIGN =
+                  Expression
+                    Conjunction
+                      Negation
+                        Equality
+                          Comparison
+                            Sum
+                              Product
+                                Unary
+                                  Power
+                                    Primary
+                                      Reference
+                                        IDENT column
+                              PLUS +
+                              Product
+                                Unary
+                                  Power
+                                    Primary
+                                      Literal
+                                        INTEGER 1
+                  SEMICOLON ;
+              RBRACE }
+        Statement
+          Assignment
+            Reference
+              IDENT row
+            ASSIGN =
+            Expression
+              Conjunction
+                Negation
+                  Equality
+                    Comparison
+                      Sum
+                        Product
+                          Unary
+                            Power
+                              Primary
+                                Reference
+                                  IDENT row
+                        PLUS +
+                        Product
+                          Unary
+                            Power
+                              Primary
+                                Literal
+                                  INTEGER 1
+            SEMICOLON ;
+        RBRACE }
+
+Statement 29 (line 81)
+  Parse tree
+  Statement
+    SwitchStmt
+      KW_SWITCH SWITCH
+      LPAREN (
+      Reference
+        IDENT numbers
+        LBRACKET [
+        Expression
+          Conjunction
+            Negation
+              Equality
+                Comparison
+                  Sum
+                    Product
+                      Unary
+                        Power
+                          Primary
+                            Literal
+                              INTEGER 0
+        RBRACKET ]
+      RPAREN )
+      LBRACE {
+      SwitchCase
+        KW_CASE CASE
+        CaseLabel
+          INTEGER 2
+        COLON :
+        Statement
+          SwitchStmt
+            KW_SWITCH SWITCH
+            LPAREN (
+            Reference
+              IDENT choice
+            RPAREN )
+            LBRACE {
+            SwitchCase
+              KW_CASE CASE
+              CaseLabel
+                MINUS -
+                INTEGER 1
+              COLON :
+              Statement
+                OutputStmt
+                  KW_OUTPUT OUTPUT
+                  STRING "Exit"
+                  SEMICOLON ;
+              KW_BREAK BREAK
+              SEMICOLON ;
+            SwitchDefault
+              KW_DEFAULT DEFAULT
+              COLON :
+              KW_BREAK BREAK
+              SEMICOLON ;
+            RBRACE }
+        KW_BREAK BREAK
+        SEMICOLON ;
+      SwitchDefault
+        KW_DEFAULT DEFAULT
+        COLON :
+        Statement
+          OutputStmt
+            KW_OUTPUT OUTPUT
+            STRING "Unexpected first number"
+            SEMICOLON ;
+        KW_BREAK BREAK
+        SEMICOLON ;
+      RBRACE }
+
+Statement 30 (line 96)
+  Parse tree
+  Statement
+    SwitchStmt
+      KW_SWITCH SWITCH
+      LPAREN (
+      Reference
+        IDENT grade
+      RPAREN )
+      LBRACE {
+      SwitchCase
+        KW_CASE CASE
+        CaseLabel
+          CHAR 'B'
+        COLON :
+        Statement
+          OutputStmt
+            KW_OUTPUT OUTPUT
+            STRING "Grade B"
+            SEMICOLON ;
+        KW_BREAK BREAK
+        SEMICOLON ;
+      SwitchDefault
+        KW_DEFAULT DEFAULT
+        COLON :
+        KW_BREAK BREAK
+        SEMICOLON ;
+      RBRACE }
+
+Statement 31 (line 104)
+  Parse tree
+  Statement
+    SwitchStmt
+      KW_SWITCH SWITCH
+      LPAREN (
+      Reference
+        IDENT title
+      RPAREN )
+      LBRACE {
+      SwitchCase
+        KW_CASE CASE
+        CaseLabel
+          STRING "Checking expressions"
+        COLON :
+        Statement
+          OutputStmt
+            KW_OUTPUT OUTPUT
+            Reference
+              IDENT title
+            SEMICOLON ;
+        KW_BREAK BREAK
+        SEMICOLON ;
+      SwitchDefault
+        KW_DEFAULT DEFAULT
+        COLON :
+        KW_BREAK BREAK
+        SEMICOLON ;
+      RBRACE }
+
+Statement 32 (line 112)
+  Parse tree
+  Statement
+    SwitchStmt
+      KW_SWITCH SWITCH
+      LPAREN (
+      Reference
+        IDENT active
+      RPAREN )
+      LBRACE {
+      SwitchCase
+        KW_CASE CASE
+        CaseLabel
+          TRUE TRUE
+        COLON :
+        Statement
+          OutputStmt
+            KW_OUTPUT OUTPUT
+            STRING "Active"
+            SEMICOLON ;
+        KW_BREAK BREAK
+        SEMICOLON ;
+      SwitchCase
+        KW_CASE CASE
+        CaseLabel
+          FALSE FALSE
+        COLON :
+        Statement
+          OutputStmt
+            KW_OUTPUT OUTPUT
+            STRING "Inactive"
+            SEMICOLON ;
+        KW_BREAK BREAK
+        SEMICOLON ;
+      SwitchDefault
+        KW_DEFAULT DEFAULT
+        COLON :
+        KW_BREAK BREAK
+        SEMICOLON ;
+      RBRACE }
+
+Statement 44 (line 178)
+  Parse tree
+  Statement
+    OutputStmt
+      KW_OUTPUT OUTPUT
+      STRING "Recovered after the intentional errors"
+      SEMICOLON ;
+

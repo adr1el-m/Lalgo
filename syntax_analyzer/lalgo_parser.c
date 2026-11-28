@@ -36,6 +36,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <setjmp.h>
+#include <ctype.h>
 
 /* ========================================================================== */
 /* 1. TERMINALS = the token names written by the lexer in the symbol table    */
@@ -254,6 +255,87 @@ static int log_begin(void)
 }
 static void log_set(int i, const char *rule) { if (i >= 0) LOG[i].rule = rule; }
 
+/* A rule name opens a node, and a NULL name closes it. Tokens between
+ * events become leaves at the current depth. */
+typedef struct { int position; const char *rule; size_t end; } TreeEvent;
+static TreeEvent *tree_events;
+static size_t tree_count, tree_capacity;
+
+static void tree_event(const char *rule)
+{
+    if (tree_count == tree_capacity) {
+        size_t capacity = tree_capacity ? tree_capacity * 2 : 128;
+        TreeEvent *events = realloc(tree_events, capacity * sizeof *events);
+        if (!events) {
+            fprintf(stderr, "out of memory recording the parse tree\n");
+            exit(2);
+        }
+        tree_events = events;
+        tree_capacity = capacity;
+    }
+    tree_events[tree_count++] = (TreeEvent){p, rule, 0};
+}
+
+/* Only complete trees reach this function. Find each closing event so a
+ * production can list its immediate children without printing descendants. */
+static void write_parsing_rows(FILE *out, int statement)
+{
+    size_t i, child;
+
+    for (i = tree_count; i-- > 0;) {
+        if (!tree_events[i].rule) continue;
+        child = i + 1;
+        while (tree_events[child].rule) child = tree_events[child].end + 1;
+        tree_events[i].end = child;
+    }
+    for (i = 0; i < tree_count; i++) {
+        const TreeEvent *event = &tree_events[i];
+        int pos = event->position;
+        const Tok *lookahead = &B[pos];
+        if (!event->rule) continue;
+
+        fprintf(out, "%d\t%d\t%d\t%s\t%s\t%s ->", statement,
+                lookahead->line, lookahead->col, event->rule,
+                TT_NAME[lookahead->type], event->rule);
+        child = i + 1;
+        while (child <= event->end) {
+            while (pos < tree_events[child].position)
+                fprintf(out, " %s", TT_NAME[B[pos++].type]);
+            if (child == event->end) break;
+            fprintf(out, " %s", tree_events[child].rule);
+            child = tree_events[child].end;
+            pos = tree_events[child++].position;
+        }
+        fputc('\n', out);
+    }
+}
+
+static void print_tree(FILE *out)
+{
+    int depth = 1, position = 0;
+    size_t i;
+
+    fputs("  Parse tree\n", out);
+    for (i = 0; i < tree_count; i++) {
+        while (position < tree_events[i].position) {
+            const Tok *token = &B[position++];
+            const unsigned char *ch = (const unsigned char *)token->lex;
+            fprintf(out, "%*s%s ", depth * 2, "", TT_NAME[token->type]);
+            for (; *ch; ch++) {
+                if (*ch < ' ' || *ch == 127) fprintf(out, "\\x%02X", (unsigned)*ch);
+                else fputc(*ch, out);
+            }
+            fputc('\n', out);
+        }
+        if (tree_events[i].rule) {
+            fprintf(out, "%*s%s\n", depth * 2, "", tree_events[i].rule);
+            depth++;
+        } else {
+            depth--;
+        }
+    }
+}
+
 static void found_str(const Tok *t, char *buf, size_t n)
 {
     if (t->type == K_EOF)          snprintf(buf, n, "end of file");
@@ -377,87 +459,114 @@ static void statement_with_recovery(void)
 
 static void parse_reference(void)                          /* R39 */
 {
+    tree_event("Reference");
     expect(K_IDENT, "variable name");
     if (accept(K_LBRACKET)) {
         parse_expression();
         expect(K_RBRACKET, "']' to close the index");
     }
+    tree_event(NULL);
 }
 
 static void parse_primary(void)                            /* R38, R40, R41 */
 {
-    if (is_literal(cur())) { p++; return; }
-    if (cur() == K_IDENT)  { parse_reference(); return; }
-    if (accept(K_LPAREN)) {
+    tree_event("Primary");
+    if (is_literal(cur())) {
+        tree_event("Literal");
+        p++;
+        tree_event(NULL);
+    } else if (cur() == K_IDENT) {
+        parse_reference();
+    } else if (accept(K_LPAREN)) {
         parse_expression();
         expect(K_RPAREN, "')' to close the expression");
-        return;
-    }
-    if (accept(K_LBRACKET)) {                              /* ArrayLiteral */
+    } else if (cur() == K_LBRACKET) {
+        tree_event("ArrayLiteral");
+        p++;
         if (cur() != K_RBRACKET) {
             parse_expression();
             while (accept(K_COMMA)) parse_expression();
         }
         expect(K_RBRACKET, "']' to close the array");
-        return;
+        tree_event(NULL);
+    } else {
+        fail_found("expected an expression");
     }
-    fail_found("expected an expression");
+    tree_event(NULL);
 }
 
 static void parse_unary(void);
 
 static void parse_power(void)                              /* R37 */
 {
+    tree_event("Power");
     parse_primary();
     if (accept(K_CARET)) parse_unary();
+    tree_event(NULL);
 }
 
 static void parse_unary(void)                              /* R36 */
 {
+    tree_event("Unary");
     if (accept(K_MINUS)) parse_unary(); else parse_power();
+    tree_event(NULL);
 }
 
 static void parse_product(void)                            /* R35 */
 {
+    tree_event("Product");
     parse_unary();
     while (cur() == K_STAR || cur() == K_SLASH || cur() == K_PERCENT || cur() == K_DIV)
     { p++; parse_unary(); }
+    tree_event(NULL);
 }
 
 static void parse_sum(void)                                /* R34 */
 {
+    tree_event("Sum");
     parse_product();
     while (cur() == K_PLUS || cur() == K_MINUS) { p++; parse_product(); }
+    tree_event(NULL);
 }
 
 static void parse_comparison(void)                         /* R33 */
 {
+    tree_event("Comparison");
     parse_sum();
     while (cur() == K_LT || cur() == K_LE || cur() == K_GT || cur() == K_GE)
     { p++; parse_sum(); }
+    tree_event(NULL);
 }
 
 static void parse_equality(void)                           /* R32 */
 {
+    tree_event("Equality");
     parse_comparison();
     while (cur() == K_EQ || cur() == K_NEQ) { p++; parse_comparison(); }
+    tree_event(NULL);
 }
 
 static void parse_negation(void)                           /* R31 */
 {
+    tree_event("Negation");
     if (accept(K_NOT)) parse_negation(); else parse_equality();
+    tree_event(NULL);
 }
 
 static void parse_conjunction(void)                        /* R30 */
 {
+    tree_event("Conjunction");
     parse_negation();
     while (accept(K_AND)) parse_negation();
+    tree_event(NULL);
 }
 
 static void parse_expression(void)                         /* R29 */
 {
+    tree_event("Expression");
     parse_conjunction();
     while (accept(K_OR)) parse_conjunction();
+    tree_event(NULL);
 }
 
 /* what is B[s..e) ?  1 = a single literal, 2 = a bare reference, 0 = expression */
@@ -484,64 +593,72 @@ static int shape_of(int s, int e)
 static void parse_declaration(void)                        /* R13 - R17 */
 {
     int e = log_begin();
+    tree_event("Declaration");
     ctx = "declaration";
-    p++;                                                   /* Type */
+    tree_event("Type");
+    p++;
+    tree_event(NULL);
     expect(K_IDENT, "variable name after the data type");
-    if (accept(K_SEMICOLON)) { log_set(e, "R14 DeclareOne"); return; }
-    if (cur() == K_COMMA) {
+    if (accept(K_SEMICOLON)) {
+        log_set(e, "R14 DeclareOne");
+    } else if (cur() == K_COMMA) {
         while (accept(K_COMMA)) expect(K_IDENT, "variable name after ','");
         expect_semi();
         log_set(e, "R15 DeclareList");
-        return;
-    }
-    if (accept(K_ASSIGN)) {
+    } else if (accept(K_ASSIGN)) {
         parse_expression();
         expect_semi();
         log_set(e, "R16 DeclareInit");
-        return;
+    } else {
+        fail_found("expected ';', ',' or '=' after the variable name");
     }
-    fail_found("expected ';', ',' or '=' after the variable name");
+    tree_event(NULL);
 }
 
 static void parse_input(void)                              /* R04 */
 {
     int e = log_begin();
+    tree_event("InputStmt");
     ctx = "input statement";
     p++;
     expect(K_IDENT, "variable name after INPUT");
     expect_semi();
     log_set(e, "R04 InputStmt");
+    tree_event(NULL);
 }
 
 static void parse_output(void)                             /* R05 - R08 */
 {
     int e = log_begin();
+    tree_event("OutputStmt");
     ctx = "output statement";
     p++;
     accept(K_NOISE_THE);
     if (cur() == K_STRING) {
         p++;
-        if (accept(K_SEMICOLON)) { log_set(e, "R06 OutputText"); return; }
-        if (accept(K_COMMA)) {
+        if (accept(K_SEMICOLON)) {
+            log_set(e, "R06 OutputText");
+        } else if (accept(K_COMMA)) {
             parse_reference();
             expect_semi();
             log_set(e, "R08 OutputMixed");
-            return;
+        } else {
+            fail_found("expected ',' or ';' after the string in OUTPUT");
         }
-        fail_found("expected ',' or ';' after the string in OUTPUT");
-    }
-    if (cur() == K_IDENT) {
+    } else if (cur() == K_IDENT) {
         parse_reference();
         expect_semi();
         log_set(e, "R07 OutputValue");
-        return;
+    } else {
+        fail_found("expected a string or a variable after OUTPUT");
     }
-    fail_found("expected a string or a variable after OUTPUT");
+    tree_event(NULL);
 }
 
 static void parse_assignment(void)                         /* R09 - R12 */
 {
     int e = log_begin(), s, en;
+    tree_event("Assignment");
     ctx = "assignment";
     accept(K_NOISE_SET);
     parse_reference();
@@ -555,6 +672,7 @@ static void parse_assignment(void)                         /* R09 - R12 */
         case 1:  log_set(e, "R11 AssignConstant");   break;
         default: log_set(e, "R12 AssignExpression"); break;
     }
+    tree_event(NULL);
 }
 
 /* ========================================================================== */
@@ -563,6 +681,7 @@ static void parse_assignment(void)                         /* R09 - R12 */
 
 static void parse_block(void)                              /* R03 */
 {
+    tree_event("Block");
     expect(K_LBRACE, "'{' to start the block");
     depth_lvl++;
     while (cur() != K_RBRACE && cur() != K_EOF) {
@@ -572,20 +691,24 @@ static void parse_block(void)                              /* R03 */
     }
     depth_lvl--;
     expect(K_RBRACE, "'}' to close the block");
+    tree_event(NULL);
 }
 
 static void parse_if_head(void)                            /* R19 */
 {
+    tree_event("IfHead");
     expect(K_KW_IF, "IF");
     expect(K_LPAREN, "'(' after IF");
     parse_expression();
     expect(K_RPAREN, "')' after the IF condition");
     parse_block();
+    tree_event(NULL);
 }
 
 static void parse_if(void)                                 /* R18 - R23 */
 {
     int e = log_begin(), chain = 0, has_else = 0;
+    tree_event("Conditional");
     ctx = "IF statement";
     parse_if_head();
     while (cur() == K_KW_ELSE) {
@@ -600,19 +723,24 @@ static void parse_if(void)                                 /* R18 - R23 */
     if (chain == 0 && !has_else) log_set(e, "R20 IfOnly");
     else if (chain == 0)         log_set(e, "R21 IfElse");
     else                         log_set(e, "R22 IfChain");
+    tree_event(NULL);
 }
 
 static void parse_while(void)                              /* R24 - R28 */
 {
     int e = log_begin(), w0;
+    tree_event("Loop");
     ctx = "WHILE statement";
+    tree_event("WhileHead");
     p++; while_count++;
     expect(K_LPAREN, "'(' after WHILE");
     parse_expression();
     expect(K_RPAREN, "')' after the WHILE condition");
+    tree_event(NULL);
     w0 = while_count;
     parse_block();
     log_set(e, while_count > w0 ? "R27 NestedWhile" : "R26 PlainWhile");
+    tree_event(NULL);
 }
 
 static int parse_arm_body(const char *what)
@@ -638,6 +766,7 @@ static int parse_arm_body(const char *what)
 static void parse_switch(void)                             /* R42 - R45 */
 {
     int e = log_begin(), ncase = 0, arms_ok = 1;
+    tree_event("SwitchStmt");
     ctx = "SWITCH statement";
     p++;
     expect(K_LPAREN, "'(' after SWITCH");
@@ -646,23 +775,30 @@ static void parse_switch(void)                             /* R42 - R45 */
     expect(K_LBRACE, "'{' to start the SWITCH body");
     depth_lvl++;
     while (cur() == K_KW_CASE) {
+        tree_event("SwitchCase");
         p++;
+        tree_event("CaseLabel");
         if (accept(K_MINUS)) expect(K_INTEGER, "an integer after '-' in the case label");
         else if (cur() == K_INTEGER || cur() == K_CHAR || cur() == K_STRING ||
                  cur() == K_TRUE || cur() == K_FALSE) p++;
         else fail_found("expected a case label (integer, character, string, TRUE or FALSE)");
+        tree_event(NULL);
         expect(K_COLON, "':' after the case label");
         if (!parse_arm_body("CASE")) arms_ok = 0;
+        tree_event(NULL);
         ncase++;
     }
     if (ncase == 0) fail_found("expected at least one CASE arm");
     if (cur() != K_KW_DEFAULT) fail_found("expected a DEFAULT arm as the last arm");
+    tree_event("SwitchDefault");
     p++;
     expect(K_COLON, "':' after DEFAULT");
     if (!parse_arm_body("DEFAULT")) arms_ok = 0;
+    tree_event(NULL);
     depth_lvl--;
     expect(K_RBRACE, "'}' to close the SWITCH");
     if (arms_ok) log_set(e, "R42 SwitchStmt");
+    tree_event(NULL);
 }
 
 /* ========================================================================== */
@@ -672,6 +808,7 @@ static void parse_switch(void)                             /* R42 - R45 */
 static void parse_statement(void)                          /* R02 */
 {
     int t = cur();
+    tree_event("Statement");
     if (is_type(t))                         parse_declaration();
     else if (t == K_KW_INPUT)               parse_input();
     else if (t == K_KW_OUTPUT)              parse_output();
@@ -688,6 +825,7 @@ static void parse_statement(void)                          /* R02 */
     else if (t >= K_RES_ALGORITHM && t <= K_RES_INVARIANT)
                                fail_plain("'%s' is a reserved word and cannot start a statement", B[p].lex);
     else                       fail_found("expected a statement");
+    tree_event(NULL);
 }
 
 /* ========================================================================== */
@@ -706,14 +844,70 @@ static void print_statement(int number, int verbose)
     }
 }
 
+static const char parsing_table_path[] = "Parsing Table.txt";
+
+static int uses_parsing_table_name(const char *path)
+{
+    const char *name = path, *expected = parsing_table_path;
+    for (; *path; path++)
+        if (*path == '/' || *path == '\\') name = path + 1;
+    while (*name && tolower((unsigned char)*name) == tolower((unsigned char)*expected)) {
+        name++;
+        expected++;
+    }
+    return !*name && !*expected;
+}
+
 int main(int argc, char **argv)
 {
-    const char *path = argc >= 2 ? argv[1] : "Symbol Table.txt";
-    int verbose = argc >= 3 && argv[2][0] == 'v';
-    int number = 0, i;
+    const char *path = NULL, *tree_path = NULL;
+    FILE *tree_out = stdout, *table_out = NULL;
+    int verbose = 0, parsing_table = 0, number = 0, i, output_error = 0;
+
+    for (i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--tree-file") == 0 && !tree_path && i + 1 < argc) {
+            tree_path = argv[++i];
+        } else if (strcmp(argv[i], "--parsing-table") == 0 && !parsing_table) {
+            parsing_table = 1;
+        } else if (argv[i][0] != '-' && !path) {
+            path = argv[i];
+        } else if (!verbose && (strcmp(argv[i], "-v") == 0 ||
+                                (path && argv[i][0] == 'v'))) {
+            verbose = 1;
+        } else {
+            fprintf(stderr, "Usage: %s [symbol-table] [-v] [--tree-file new-path] [--parsing-table]\n", argv[0]);
+            return 2;
+        }
+    }
+    if (!path) path = "Symbol Table.txt";
+    if (parsing_table && (uses_parsing_table_name(path) ||
+                          (tree_path && uses_parsing_table_name(tree_path)))) {
+        fprintf(stderr, "'%s' is reserved for the generated parsing table; use a different input or tree filename\n",
+                parsing_table_path);
+        return 2;
+    }
 
     fin = fopen(path, "r");
     if (!fin) { fprintf(stderr, "cannot open symbol table '%s' (run the lexer first)\n", path); return 2; }
+    if (tree_path) {
+        tree_out = fopen(tree_path, "wx");
+        if (!tree_out) {
+            fprintf(stderr, "cannot create parse tree file '%s': ", tree_path);
+            perror(NULL);
+            fclose(fin);
+            return 2;
+        }
+    }
+    if (parsing_table) {
+        table_out = fopen(parsing_table_path, "w");
+        if (!table_out) {
+            perror(parsing_table_path);
+            if (tree_path) fclose(tree_out);
+            fclose(fin);
+            return 2;
+        }
+        fputs("Statement\tLine\tColumn\tNonterminal\tLookahead\tProduction / diagnostic\n", table_out);
+    }
 
     printf("=== LAlgo SYNTAX ANALYZER (recursive descent) ===\n");
     printf("Reading terminals one at a time from: %s\n\n", path);
@@ -724,7 +918,7 @@ int main(int argc, char **argv)
         if (blen == 1 && B[0].type == K_EOF) break;
 
         print_statement(++number, verbose);
-        p = 0; nlog = 0; nerr_stmt = 0;
+        p = 0; nlog = 0; nerr_stmt = 0; tree_count = 0;
         first_error_free = total_errors;
 
         while (cur() != K_EOF) {                   /* normally exactly one statement */
@@ -739,15 +933,38 @@ int main(int argc, char **argv)
             if (LOG[i].rule) {
                 printf("  %*sline %-3d %s\n", LOG[i].depth * 2, "", LOG[i].line, LOG[i].rule);
             }
-        for (i = 0; i < nerr_stmt && i < 64; i++) printf("  %s\n", errs[i]);
-        if (total_errors == first_error_free) printf("  -> OK\n");
+        for (i = 0; i < nerr_stmt && i < 64; i++) {
+            printf("  %s\n", errs[i]);
+            if (table_out) fprintf(table_out, "%d\t\t\t\t\t%s\n", number, errs[i]);
+        }
+        if (total_errors == first_error_free) {
+            printf("  -> OK\n");
+            if (tree_path) fprintf(tree_out, "Statement %d (line %d)\n", number, B[0].line);
+            print_tree(tree_out);
+            if (table_out) write_parsing_rows(table_out, number);
+            if (tree_path) fputc('\n', tree_out);
+        }
         printf("\n");
     }
 
     printf("=== RESULT: %d statement(s) checked, %d syntax error(s) ===\n", number, total_errors);
     free_statement_tokens();
     free(B);
+    free(tree_events);
     if (has_peek) free(peeked.lex);
     fclose(fin);
+    if (table_out) {
+        if (fclose(table_out) != 0) {
+            fprintf(stderr, "cannot finish writing '%s'\n", parsing_table_path);
+            output_error = 1;
+        } else {
+            printf("Parsing table written to: %s\n", parsing_table_path);
+        }
+    }
+    if (tree_path && fclose(tree_out) != 0) {
+        fprintf(stderr, "cannot finish writing parse tree file '%s'\n", tree_path);
+        return 2;
+    }
+    if (output_error) return 2;
     return total_errors > 0 ? 1 : 0;
 }
